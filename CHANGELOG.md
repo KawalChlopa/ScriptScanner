@@ -13,9 +13,13 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 - ekstrakcję IOC i korelację z logami,
 - UTC, opcjonalny NTP, VirusTotal i URLhaus,
 - szczegółowy raport terminalowy i wersjonowane pliki JSON/PDF,
-- 50 testów jednostkowych i integracyjnych,
+- 71 testów jednostkowych i integracyjnych,
 - dokumentację architektury, infrastruktury, bezpieczeństwa i pokrycia wymagań,
-- zasady utrzymania projektu w `AGENTS.md`.
+- zasady utrzymania projektu w `AGENTS.md`,
+- monitor aktualnych połączeń TCP/UDP dla Windows i Linux z PID, nazwą procesu,
+  terminalem i atomowym raportem JSONL,
+- obowiązkowe rozbrajanie URL, domen, IPv4 i IPv6 w terminalu, JSON, PDF, JSONL
+  oraz `deobfuscated.txt`, z zachowaniem korelacji rozbrojonych logów.
 
 ### Przykłady
 
@@ -30,6 +34,12 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 - domyślny katalog wyników z `output` na `report`,
 - dodano tryby `files`, `terminal` i `both`,
 - usunięto generowanie HTML zgodnie z decyzją użytkownika,
-- raport terminalowy sanitizuje niezaufane znaki sterujące.
+- raport terminalowy sanitizuje niezaufane znaki sterujące,
 - utwardzono `.gitignore`: raporty i sekrety pozostają lokalne, a logi z
-  `examples/` są jawnie dołączane jako dane demonstracyjne.
+  `examples/` są jawnie dołączane jako dane demonstracyjne,
+- spłaszczono kod produkcyjny bezpośrednio do `src/`, zachowując komendy
+  `python src/main.py` oraz `infa-sled`,
+- zastąpiono techniczny plik `infa_sled.py` czytelnym punktem startowym
+  `main.py`,
+- dodano punkt wejścia `infa-sled-monitor` oraz zależność `psutil` do
+  przenośnego, tylko do odczytu dostępu do tabel gniazd.

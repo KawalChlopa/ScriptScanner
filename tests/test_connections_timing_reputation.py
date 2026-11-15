@@ -9,10 +9,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import URLError
 
-from infa_sled.connections import correlate_iocs, extract_timestamp, parse_connection_log
-from infa_sled.errors import InputFileError
-from infa_sled.models import ConnectionRecord, IOC, TimestampInfo
-from infa_sled.reputation import (
+from connections import correlate_iocs, extract_timestamp, parse_connection_log
+from errors import InputFileError
+from models import ConnectionRecord, IOC, TimestampInfo
+from reputation import (
     check_reputation,
     parse_urlhaus,
     parse_virustotal,
@@ -20,7 +20,7 @@ from infa_sled.reputation import (
     urlhaus_request,
     virustotal_request,
 )
-from infa_sled.timing import (
+from timing import (
     NTP_EPOCH_DELTA,
     format_utc,
     get_timestamp,
@@ -42,7 +42,7 @@ class ConnectionTests(unittest.TestCase):
             path = Path(directory) / "network.jsonl"
             path.write_text(
                 '{"timestamp":"2026-11-15T12:13:14Z","dst":"8.8.8.8"}\n'
-                "2026-11-15 13:00:00 host=bad.example\n",
+                "2026-11-15 13:00:00 host=bad[.]example\n",
                 encoding="utf-8",
             )
             records = parse_connection_log(path)

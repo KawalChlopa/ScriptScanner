@@ -7,9 +7,10 @@ Te zasady obowiązują w całym repozytorium.
 ## Cel projektu
 
 Repozytorium zawiera lokalny system CLI do pasywnej analizy skryptów PowerShell,
-JavaScript i Bash. System ma wykrywać podejrzane konstrukcje i obfuskację,
-bezpiecznie dekodować wybrane literały, wyodrębniać IOC, korelować je z
-dostarczonymi logami oraz generować raport terminalowy i pliki JSON/PDF.
+JavaScript i Bash oraz monitor aktualnych połączeń TCP/UDP dla Windows i Linux.
+System ma wykrywać podejrzane konstrukcje i obfuskację, bezpiecznie dekodować
+wybrane literały, wyodrębniać IOC, korelować je z dostarczonymi lub zebranymi
+logami oraz generować raport terminalowy i pliki JSON/PDF/JSONL.
 
 ## Niezmienniki bezpieczeństwa
 
@@ -24,11 +25,15 @@ dostarczonymi logami oraz generować raport terminalowy i pliki JSON/PDF.
    opcji użytkownika i jest opisana w `docs/SECURITY.md`.
 6. Limity rozmiaru, czasu i ilości danych muszą być walidowane na granicach
    systemu.
+7. Monitor systemowy jest obserwatorem: nie otwiera, nie blokuje i nie modyfikuje
+   połączeń ani procesów.
+8. Wszystkie URL, domeny i adresy IP prezentowane w terminalu albo zapisywane w
+   raportach muszą być rozbrojone; surowe wartości służą wyłącznie obliczeniom.
 
 ## Zasady implementacji
 
 - Python 3.11+; biblioteka standardowa jest domyślnym wyborem.
-- Kod produkcyjny znajduje się w `src/infa_sled`, testy w `tests`.
+- Kod produkcyjny znajduje się bezpośrednio w `src`, testy w `tests`.
 - Moduły wymieniają typowane, serializowalne modele z `models.py`.
 - Każda nowa lub zmieniona funkcja musi mieć test jednostkowy obejmujący
   poprawny przypadek oraz istotny przypadek brzegowy albo błąd.

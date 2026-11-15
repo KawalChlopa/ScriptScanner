@@ -6,8 +6,8 @@ import base64
 import binascii
 import re
 
-from .models import ObfuscationSignal, Transformation
-from .rules import line_number
+from models import ObfuscationSignal, Transformation
+from rules import line_number
 
 BASE64_RE = re.compile(r"(?<![A-Za-z0-9+/=])([A-Za-z0-9+/]{20,}={0,2})(?![A-Za-z0-9+/=])")
 HEX_ESCAPE_RE = re.compile(r"\\x([0-9a-fA-F]{2})")

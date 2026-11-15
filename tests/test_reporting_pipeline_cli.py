@@ -10,10 +10,10 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from infa_sled.cli import build_parser, config_from_args, main, parse_formats
-from infa_sled.config import AnalysisConfig
-from infa_sled.errors import InputFileError, ReportError
-from infa_sled.models import (
+from main import build_parser, config_from_args, main, parse_formats
+from config import AnalysisConfig
+from errors import InputFileError, ReportError
+from models import (
     AnalysisResult,
     Finding,
     Hashes,
@@ -23,8 +23,8 @@ from infa_sled.models import (
     TimestampInfo,
     Transformation,
 )
-from infa_sled.pipeline import analyze_and_write, analyze_file, merge_findings
-from infa_sled.reporting import (
+from pipeline import analyze_and_write, analyze_file, merge_findings
+from reporting import (
     analysis_directory,
     atomic_write,
     build_pdf,
@@ -71,6 +71,8 @@ class ReportingTests(unittest.TestCase):
         result = sample_result()
         payload = report_payload(result)
         self.assertEqual(payload["summary"]["finding_count"], 1)
+        self.assertEqual(payload["iocs"][0]["value"], "bad[.]example")
+        self.assertEqual(payload["deobfuscated_text"], "IEX hxxps://bad[.]example")
         rendered = json.loads(render_json(result))
         self.assertEqual(rendered["hashes"]["sha256"], "a" * 64)
 
@@ -84,6 +86,7 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("DETEKCJE (1)", rendered)
         self.assertIn("TRANSFORMACJE (1)", rendered)
         self.assertIn("IEX <script>", rendered)
+        self.assertIn("bad[.]example", rendered)
         self.assertIn("Analizowany kod nie zostal uruchomiony", rendered)
 
     def test_pdf_helpers_escape_wrap_and_build_document(self) -> None:
@@ -109,6 +112,11 @@ class ReportingTests(unittest.TestCase):
             outputs = write_reports(result, root, ("json", "pdf"))
             self.assertEqual({path.suffix for path in outputs}, {".json", ".pdf", ".txt"})
             self.assertTrue(all(path.is_file() for path in outputs))
+            deobfuscated = next(path for path in outputs if path.suffix == ".txt")
+            self.assertEqual(
+                deobfuscated.read_text(encoding="utf-8"),
+                "IEX hxxps://bad[.]example",
+            )
             with self.assertRaises(ReportError):
                 write_reports(result, root, ("xml",))
 
@@ -230,7 +238,7 @@ class CliTests(unittest.TestCase):
 
     def test_main_reports_success_and_controlled_error(self) -> None:
         result = sample_result()
-        with patch("infa_sled.cli.analyze_and_write", return_value=(result, (Path("report.json"),))):
+        with patch("main.analyze_and_write", return_value=(result, (Path("report.json"),))):
             stdout = io.StringIO()
             with redirect_stdout(stdout):
                 code = main(["sample.ps1", "--formats", "json"])
@@ -238,7 +246,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("Analiza zakonczona", stdout.getvalue())
         self.assertIn("ETAPY ANALIZY", stdout.getvalue())
 
-        with patch("infa_sled.cli.analyze_file", return_value=result):
+        with patch("main.analyze_file", return_value=result):
             stdout = io.StringIO()
             with redirect_stdout(stdout):
                 code = main(["sample.ps1", "--mode", "terminal"])
@@ -246,7 +254,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("KORELACJE Z LOGAMI", stdout.getvalue())
         self.assertNotIn("Zapisane pliki", stdout.getvalue())
 
-        with patch("infa_sled.cli.analyze_and_write", side_effect=InputFileError("missing")):
+        with patch("main.analyze_and_write", side_effect=InputFileError("missing")):
             stderr = io.StringIO()
             with redirect_stderr(stderr):
                 code = main(["missing.ps1"])

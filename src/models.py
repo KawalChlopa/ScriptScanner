@@ -78,6 +78,24 @@ class ConnectionMatch:
 
 
 @dataclass(frozen=True, slots=True)
+class LiveConnection:
+    """Pojedyncze polaczenie widoczne w chwili wykonania probki systemu."""
+
+    observed_at_utc: str
+    system: str
+    protocol: str
+    family: str
+    status: str
+    local_address: str
+    local_port: int
+    remote_address: str | None
+    remote_port: int | None
+    pid: int | None
+    process_name: str | None
+    process_executable: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class ReputationResult:
     provider: str
     ioc_kind: str

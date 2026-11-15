@@ -10,7 +10,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
-from .models import IOC, ReputationResult
+from models import IOC, ReputationResult
 
 
 def virustotal_request(ioc: IOC, api_key: str) -> Request:

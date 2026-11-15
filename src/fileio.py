@@ -6,8 +6,8 @@ import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .errors import InputFileError, UnsupportedLanguageError
-from .models import Hashes, ScriptInput
+from errors import InputFileError, UnsupportedLanguageError
+from models import Hashes, ScriptInput
 
 EXTENSION_LANGUAGES = {
     ".ps1": "powershell",

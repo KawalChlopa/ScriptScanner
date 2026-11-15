@@ -5,17 +5,17 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
-from .config import AnalysisConfig
-from .connections import correlate_iocs, parse_connection_log
-from .errors import InputFileError
-from .fileio import read_script
-from .ioc import extract_iocs, merge_iocs
-from .models import AnalysisResult, Finding, SourceMetadata
-from .obfuscation import deobfuscate, detect_obfuscation
-from .reporting import write_reports
-from .reputation import check_reputation
-from .rules import scan_suspicious
-from .timing import get_timestamp
+from config import AnalysisConfig
+from connections import correlate_iocs, parse_connection_log
+from errors import InputFileError
+from fileio import read_script
+from ioc import extract_iocs, merge_iocs
+from models import AnalysisResult, Finding, SourceMetadata
+from obfuscation import deobfuscate, detect_obfuscation
+from reporting import write_reports
+from reputation import check_reputation
+from rules import scan_suspicious
+from timing import get_timestamp
 
 
 def merge_findings(

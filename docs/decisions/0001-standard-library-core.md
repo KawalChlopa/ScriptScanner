@@ -11,9 +11,11 @@ instalacji i nie są jednocześnie dostępne na wszystkich systemach.
 
 ## Decyzja
 
-Rdzeń używa wyłącznie biblioteki standardowej Pythona. Detekcje są stabilnymi
-regułami Regex, a PDF jest generowany lokalnie. Narzędzia zewnętrzne mogą być
-później dodane jako opcjonalne adaptery zgodne z kontraktem `Finding`.
+Rdzeń analizy statycznej używa wyłącznie biblioteki standardowej Pythona.
+Detekcje są stabilnymi regułami Regex, a PDF jest generowany lokalnie.
+Narzędzia zewnętrzne mogą być później dodane jako opcjonalne adaptery zgodne z
+kontraktem `Finding`. Osobny monitor systemowy używa `psutil`; decyzję i granicę
+opisuje ADR-0003.
 
 ## Konsekwencje
 

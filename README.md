@@ -13,30 +13,46 @@ Projekt realizuje wymagania z dokumentu `Informatyka_sledcza.pdf` i obejmuje:
 - pasywną defuskację obsługiwanych literałów,
 - ekstrakcję i normalizację URL, domen oraz adresów IPv4,
 - korelację IOC z dostarczonymi tekstowymi logami połączeń,
+- monitor aktualnych połączeń TCP/UDP z procesami na Windowsie i Linuksie,
 - lokalne znaczniki UTC i opcjonalny NTP,
 - jawnie opcjonalne zapytania VirusTotal API v3 lub URLhaus,
 - szczegółowy raport terminalowy oraz wersjonowane pliki JSON i PDF.
+- automatyczne rozbrajanie URL, domen i IP we wszystkich raportach.
 
 ## Wymagania
 
 - Python 3.11 lub nowszy,
-- brak obowiązkowych zależności zewnętrznych,
+- `psutil` (instalowany automatycznie razem z projektem) dla monitora systemu,
 - sieć nie jest potrzebna do podstawowej analizy.
+
+## Struktura kodu
+
+Kod jest celowo spłaszczony. Wszystkie moduły produkcyjne znajdują się
+bezpośrednio w `src/`; nie ma dodatkowego katalogu pakietu:
+
+```text
+src/
+├── main.py        # główny punkt uruchomienia analizatora
+├── system_monitor.py
+├── pipeline.py
+├── reporting.py
+├── rules.py
+└── ...
+```
 
 ## Szybki start
 
-Instalacja w trybie edytowalnym:
+Instalacja:
 
 ```powershell
-python -m pip install -e .
+python -m pip install .
 infa-sled .\examples\benign.js
 ```
 
-Uruchomienie bez instalacji w PowerShell:
+Uruchomienie bez instalacji:
 
 ```powershell
-$env:PYTHONPATH = "src"
-python -m infa_sled .\examples\benign.js
+python .\src\main.py .\examples\benign.js
 ```
 
 Domyślny tryb `both` wypisuje szczegółowy raport w terminalu oraz zapisuje
@@ -53,14 +69,61 @@ report/
 Sposób prezentacji można wybrać jawnie:
 
 ```cmd
-set "PYTHONPATH=src" && python -m infa_sled examples\benign.js --mode files
-set "PYTHONPATH=src" && python -m infa_sled examples\benign.js --mode terminal
-set "PYTHONPATH=src" && python -m infa_sled examples\benign.js --mode both
+python src\main.py examples\benign.js --mode files
+python src\main.py examples\benign.js --mode terminal
+python src\main.py examples\benign.js --mode both
 ```
 
 - `files` - zapisuje JSON/PDF, a w terminalu pokazuje tylko podsumowanie i ścieżki,
 - `terminal` - pokazuje pełny raport, ale nie tworzy plików,
 - `both` - wykonuje oba działania; jest trybem domyślnym.
+
+## Monitor połączeń Windows/Linux
+
+Po instalacji można obserwować aktualne połączenia całego systemu:
+
+```powershell
+infa-sled-monitor --duration 30 --interval 1 --mode both
+```
+
+Bez instalacji wpisu konsolowego:
+
+```powershell
+python .\src\system_monitor.py --duration 30 --interval 1 --mode both
+```
+
+Monitor pokazuje nowe połączenia TCP/UDP w terminalu i zapisuje je do czytelnego
+katalogu, na przykład:
+
+```text
+report/
+└── system-connections__2026-11-15_14-30-00-123_UTC__windows/
+    └── connections.jsonl
+```
+
+Każdy rekord zawiera czas UTC, protokół, lokalny i zdalny adres, stan, PID,
+nazwę procesu oraz jego ścieżkę, o ile system pozwala je odczytać. Porty
+nasłuchujące i UDP bez zdalnego adresu można dołączyć flagą
+`--include-unconnected`. Na Windowsie warto uruchomić terminal jako
+administrator, a na Linuksie jako root, jeśli potrzebny jest możliwie pełny
+widok procesów.
+
+Wszystkie obserwable w terminalu i plikach są rozbrojone, na przykład
+`hxxps://bad[.]example/a`, `192[.]0[.]2[.]10` i `bad[.]example`. Dotyczy to
+JSON, PDF, JSONL i `deobfuscated.txt`. Parser logów rozpoznaje taką postać i
+normalizuje ją wyłącznie wewnętrznie na potrzeby korelacji.
+
+Zebrany plik jest bezpośrednim wejściem dla korelacji:
+
+```powershell
+infa-sled .\examples\suspicious_obfuscated.ps1 `
+  --connection-log .\report\system-connections__...__windows\connections.jsonl
+```
+
+Monitor działa od chwili uruchomienia i wykonuje migawki. Nie jest snifferem
+pakietów: bardzo krótkie połączenie pomiędzy próbkami może zostać pominięte.
+Nie odtwarza też automatycznie zdarzeń sprzed startu. Sposoby badania istniejącej
+historii opisuje [docs/SYSTEM_MONITORING.md](docs/SYSTEM_MONITORING.md).
 
 ## Korelacja z logiem
 
@@ -115,9 +178,9 @@ Base64, sekwencjami hex, konkatenacją oraz podejrzanymi nazwami. Nie uruchamiaj
 ich jako skryptów - podawaj je wyłącznie analizatorowi z właściwym logiem:
 
 ```cmd
-set "PYTHONPATH=src" && python -m infa_sled examples\suspicious_obfuscated.ps1 --connection-log examples\connection_history.log --mode both
-set "PYTHONPATH=src" && python -m infa_sled examples\suspicious_obfuscated.js --connection-log examples\connection_history_javascript.log --mode both
-set "PYTHONPATH=src" && python -m infa_sled examples\suspicious_obfuscated.sh --connection-log examples\connection_history_bash.log --mode both
+python src\main.py examples\suspicious_obfuscated.ps1 --connection-log examples\connection_history.log --mode both
+python src\main.py examples\suspicious_obfuscated.js --connection-log examples\connection_history_javascript.log --mode both
+python src\main.py examples\suspicious_obfuscated.sh --connection-log examples\connection_history_bash.log --mode both
 ```
 
 Oczekiwany rezultat obejmuje detekcje podejrzanych konstrukcji, trzy sygnały
@@ -145,8 +208,10 @@ granice wejścia mają przypadki błędne. Szczegółowa mapa znajduje się w
   Parser API są zaplanowanym rozszerzeniem, nie ukrytą zależnością.
 - Defuskacja celowo obsługuje ograniczone, jednoznaczne transformacje i nigdy
   nie interpretuje uzyskanego kodu.
-- Korelacja działa na jawnie podanych logach; prototyp nie odczytuje samodzielnie
-  uprzywilejowanych dzienników systemowych.
+- Monitor bieżący nie dowodzi, że program nigdy wcześniej nie był uruchomiony;
+  ślady historyczne zależą od wcześniej włączonego audytu i retencji logów.
+- Prototyp nie odczytuje automatycznie historycznych dzienników Security,
+  PowerShell, Sysmon, auditd ani journald.
 
 Architekturę, infrastrukturę, model zagrożeń i pokrycie wymagań opisano w
 katalogu `docs/`.

@@ -11,8 +11,9 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-from .errors import ReportError
-from .models import AnalysisResult, to_primitive
+from errors import ReportError
+from models import AnalysisResult, to_primitive
+from sanitization import defang_data, defang_observable, defang_text
 
 
 def safe_component(value: str) -> str:
@@ -27,6 +28,11 @@ def report_payload(result: AnalysisResult) -> dict[str, Any]:
     """Dodaje podsumowanie do pelnego, serializowalnego wyniku analizy."""
 
     payload = to_primitive(result)
+    for item in payload["iocs"]:
+        item["value"] = defang_observable(item["kind"], item["value"])
+    for item in payload["connection_matches"]:
+        item["ioc_value"] = defang_observable(item["ioc_kind"], item["ioc_value"])
+    payload = defang_data(payload)
     payload["summary"] = {
         "finding_count": len(result.findings),
         "high_or_critical_count": sum(
@@ -48,6 +54,7 @@ def render_json(result: AnalysisResult) -> bytes:
 def terminal_text(value: str, limit: int = 500) -> str:
     """Usuwa znaki sterujace, aby niezaufany tekst nie sterowal terminalem."""
 
+    value = defang_text(value)
     printable = "".join(character if character.isprintable() else " " for character in value)
     return " ".join(printable.split())[:limit]
 
@@ -119,7 +126,8 @@ def render_terminal(result: AnalysisResult) -> str:
         for item in result.iocs:
             sources = ", ".join(terminal_text(source) for source in item.sources)
             lines.append(
-                f"  {terminal_text(item.kind)}: {terminal_text(item.value)} [zrodla: {sources}]"
+                f"  {terminal_text(item.kind)}: "
+                f"{terminal_text(defang_observable(item.kind, item.value))} [zrodla: {sources}]"
             )
     else:
         lines.append("  Brak")
@@ -128,7 +136,7 @@ def render_terminal(result: AnalysisResult) -> str:
     if result.connection_matches:
         for match in result.connection_matches:
             lines.append(
-                f"  {terminal_text(match.ioc_value)} @ "
+                f"  {terminal_text(defang_observable(match.ioc_kind, match.ioc_value))} @ "
                 f"{terminal_text(match.timestamp or 'brak czasu')}"
             )
             lines.append(f"    Log: {terminal_text(match.log_source)}")
@@ -146,6 +154,7 @@ def render_terminal(result: AnalysisResult) -> str:
 def pdf_text(value: str) -> str:
     """Transliteruje i escapuje tekst dla wbudowanej czcionki PDF Helvetica."""
 
+    value = defang_text(value)
     ascii_text = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     return ascii_text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
@@ -175,10 +184,12 @@ def pdf_lines(result: AnalysisResult) -> list[str]:
         lines.append(f"[{signal.confidence}] {signal.kind}, linia {signal.line}: {signal.detail}")
     lines.extend(("", f"IOC ({len(result.iocs)})"))
     for item in result.iocs:
-        lines.append(f"{item.kind}: {item.value} (zrodla: {', '.join(item.sources)})")
+        value = defang_observable(item.kind, item.value)
+        lines.append(f"{item.kind}: {value} (zrodla: {', '.join(item.sources)})")
     lines.extend(("", f"KORELACJE ({len(result.connection_matches)})"))
     for match in result.connection_matches:
-        lines.append(f"{match.ioc_value} @ {match.timestamp or 'brak czasu'} w {match.log_source}")
+        value = defang_observable(match.ioc_kind, match.ioc_value)
+        lines.append(f"{value} @ {match.timestamp or 'brak czasu'} w {match.log_source}")
     lines.extend(("", "OSTRZEZENIA"))
     lines.extend(result.warnings or ("Brak",))
     lines.extend(("", "Analizowany kod nie zostal uruchomiony."))
@@ -292,6 +303,9 @@ def write_reports(
         written.append(atomic_write(directory / f"report.{report_format}", renderer(result)))
     if result.deobfuscated_text is not None:
         written.append(
-            atomic_write(directory / "deobfuscated.txt", result.deobfuscated_text.encode("utf-8"))
+            atomic_write(
+                directory / "deobfuscated.txt",
+                defang_text(result.deobfuscated_text).encode("utf-8"),
+            )
         )
     return tuple(written)

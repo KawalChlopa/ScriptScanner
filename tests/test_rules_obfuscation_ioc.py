@@ -3,9 +3,9 @@ from __future__ import annotations
 import base64
 import unittest
 
-from infa_sled.ioc import extract_iocs, merge_iocs, normalize_ioc
-from infa_sled.models import IOC
-from infa_sled.obfuscation import (
+from ioc import extract_iocs, merge_iocs, normalize_ioc
+from models import IOC
+from obfuscation import (
     decode_base64_literal,
     decode_escaped_literals,
     deobfuscate,
@@ -13,7 +13,7 @@ from infa_sled.obfuscation import (
     printable_ratio,
     simplify_string_concatenations,
 )
-from infa_sled.rules import default_rules, excerpt_for, line_number, scan_suspicious
+from rules import default_rules, excerpt_for, line_number, scan_suspicious
 
 
 class RulesTests(unittest.TestCase):
@@ -108,6 +108,15 @@ class IocTests(unittest.TestCase):
         self.assertNotIn(("domain", "console.log"), values)
         self.assertNotIn(("domain", "node.js"), values)
         self.assertNotIn(("ip", "999.1.1.1"), values)
+
+    def test_extract_iocs_normalizes_defanged_report_values(self) -> None:
+        iocs = extract_iocs(
+            "hxxps://bad[.]example/a and 192[.]0[.]2[.]10",
+            "connection-log",
+        )
+        values = {(item.kind, item.value) for item in iocs}
+        self.assertIn(("url", "https://bad.example/a"), values)
+        self.assertIn(("ip", "192.0.2.10"), values)
 
     def test_merge_iocs_preserves_source_provenance(self) -> None:
         original = (IOC("domain", "bad.example", ("original",)),)

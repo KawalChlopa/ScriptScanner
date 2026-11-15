@@ -6,7 +6,8 @@ import ipaddress
 import re
 from urllib.parse import urlsplit, urlunsplit
 
-from .models import IOC
+from models import IOC
+from sanitization import restore_defanged_text
 
 URL_RE = re.compile(r"\bhttps?://[^\s<>\"'`]+", re.IGNORECASE)
 IP_RE = re.compile(r"(?<![\w:])(?:\d{1,3}\.){3}\d{1,3}(?![\w:])")
@@ -39,6 +40,7 @@ def normalize_ioc(kind: str, value: str) -> str:
 def extract_iocs(text: str, source: str) -> tuple[IOC, ...]:
     """Wyodrebnia URL, IPv4 i domeny z jednej reprezentacji tekstu."""
 
+    text = restore_defanged_text(text)
     values: dict[tuple[str, str], set[str]] = {}
     occupied_domains: set[str] = set()
     for match in URL_RE.finditer(text):

@@ -1,4 +1,4 @@
-"""Interfejs wiersza polecen dla pasywnego analizatora."""
+"""Glowny punkt uruchomienia pasywnego analizatora."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from . import __version__
-from .config import AnalysisConfig, SUPPORTED_REPORT_FORMATS
-from .errors import AnalysisError, ConfigurationError
-from .pipeline import analyze_and_write, analyze_file
-from .reporting import render_terminal
+from config import AnalysisConfig, SUPPORTED_REPORT_FORMATS
+from errors import AnalysisError, ConfigurationError
+from pipeline import analyze_and_write, analyze_file
+from reporting import render_terminal
+from version import __version__
 
 
 def parse_formats(value: str) -> tuple[str, ...]:
@@ -100,3 +100,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         for path in outputs:
             print(f"  {path}")
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

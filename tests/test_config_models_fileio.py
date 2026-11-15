@@ -6,16 +6,16 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from infa_sled.config import AnalysisConfig
-from infa_sled.errors import ConfigurationError, InputFileError, UnsupportedLanguageError
-from infa_sled.fileio import (
+from config import AnalysisConfig
+from errors import ConfigurationError, InputFileError, UnsupportedLanguageError
+from fileio import (
     compute_hashes,
     decode_script,
     detect_language,
     modified_at_utc,
     read_script,
 )
-from infa_sled.models import Hashes, to_primitive
+from models import Hashes, to_primitive
 
 
 class ModelsTests(unittest.TestCase):

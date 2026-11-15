@@ -13,16 +13,34 @@ authors = [
   { name = "Gabriel Lakowski" },
   { name = "Piotr Kupczyk" },
 ]
-dependencies = []
+dependencies = [
+  "psutil>=5.9,<8",
+]
 
 [project.scripts]
-infa-sled = "infa_sled.cli:main"
+infa-sled = "main:main"
+infa-sled-monitor = "system_monitor:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
+py-modules = [
+  "version",
+  "main",
+  "config",
+  "connections",
+  "errors",
+  "fileio",
+  "ioc",
+  "models",
+  "obfuscation",
+  "pipeline",
+  "reporting",
+  "reputation",
+  "rules",
+  "sanitization",
+  "system_monitor",
+  "timing",
+]
 
 [tool.ruff]
 line-length = 100
@@ -34,7 +52,7 @@ ignore = ["S324"]
 
 [tool.coverage.run]
 branch = true
-source = ["infa_sled"]
+source = ["src"]
 
 [tool.coverage.report]
 fail_under = 90

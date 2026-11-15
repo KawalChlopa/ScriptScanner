@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .models import Finding
+from models import Finding
 
 
 @dataclass(frozen=True, slots=True)

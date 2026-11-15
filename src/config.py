@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import ConfigurationError
+from errors import ConfigurationError
 
 SUPPORTED_REPORT_FORMATS = frozenset({"json", "pdf"})
 SUPPORTED_REPUTATION_PROVIDERS = frozenset({"virustotal", "urlhaus"})

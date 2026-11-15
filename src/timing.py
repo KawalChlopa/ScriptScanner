@@ -7,7 +7,7 @@ import struct
 from collections.abc import Callable
 from datetime import datetime, timezone
 
-from .models import TimestampInfo
+from models import TimestampInfo
 
 NTP_EPOCH_DELTA = 2_208_988_800
 
