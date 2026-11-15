@@ -35,6 +35,7 @@ class ModelsTests(unittest.TestCase):
 
 class ConfigTests(unittest.TestCase):
     def test_config_normalizes_values(self) -> None:
+        self.assertEqual(AnalysisConfig().output_dir, Path("raport"))
         config = AnalysisConfig(
             output_dir="reports",
             report_formats=("JSON", "json", "pdf"),

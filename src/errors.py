@@ -20,7 +20,3 @@ class ConfigurationError(AnalysisError):
 class ReportError(AnalysisError):
     """Nie udalo sie bezpiecznie zapisac raportu."""
 
-
-class MonitorError(AnalysisError):
-    """Nie udalo sie pobrac albo zapisac danych monitora systemowego."""
-

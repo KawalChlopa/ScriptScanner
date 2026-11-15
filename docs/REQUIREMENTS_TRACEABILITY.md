@@ -23,27 +23,28 @@ w tym repozytorium.
 | ID | Wymaganie | Implementacja | Status |
 |---|---|---|---|
 | M-08 | znaczniki start/koniec, opcjonalny NTP | `timing.py`, oznaczony fallback | pełne |
-| M-09 | historia połączeń | jawnie dostarczone lub zebrane logi JSONL, dokładna korelacja IOC | pełne dla prototypu lokalnego |
-| M-10 | bieżące połączenia systemu | `system_monitor.py`, TCP/UDP, PID i proces, Windows/Linux | pełne jako monitor migawkowy |
+| M-09 | historia połączeń | import logów, opcjonalny odczyt OS, rodzaje dowodów, dopasowanie hosta URL | pełne dla obsługiwanych źródeł; wymaga wcześniejszego logowania |
+| M-10 | historia wywołania skryptu | Sysmon 1, Security 4688, Linux Audit, JSONL; dokładna ścieżka/hash skryptu | ograniczone do rozpoznanych zdarzeń; nie dowodzi ukończenia |
+| M-11 | czytelny interfejs wyników | domyślny terminal, postęp poza raportem, `--mode raport --type ...` | pełne |
 | R-01 | opcjonalna reputacja IOC | VirusTotal v3 i URLhaus, bramka sieciowa | pełne, wymaga klucza |
 
 ## Niefunkcjonalne
 
 | ID | Wymaganie | Dowód | Status |
 |---|---|---|---|
-| NF-01 | brak wykonania kodu | architektura bez subprocess/eval, `AGENTS.md` | pełne |
+| NF-01 | brak wykonania kodu | brak eval i uruchamiania próbki; subprocess tylko do stałych narzędzi odczytu OS, `AGENTS.md` | pełne |
 | NF-02 | integralność źródła | odczyt binarny, skróty, osobny katalog raportów, test integralności | pełne |
 | NF-03 | modularność | moduły o rozdzielonych odpowiedzialnościach i typowane modele | pełne |
 | NF-04 | rozszerzalność | stabilne reguły i kontrakty modeli | pełne dla reguł |
 | NF-05 | powtarzalność | deterministyczne lokalne etapy; czas i API jawnie zmienne | pełne lokalnie |
 | NF-06 | odporność i limity | rozmiar, linie, odpowiedź API, timeout sieci | pełne; brak limitu CPU Regex |
-| NF-07 | praca lokalna | jedna lokalna zależność `psutil`, bez usług | pełne |
+| NF-07 | praca lokalna | brak zależności runtime i usług | pełne |
 
 ## Planowane rozszerzenia, nie kryteria ukończenia prototypu
 
 1. Adapter YARA z osobnym pakietem reguł.
 2. Adaptery Semgrep i ShellCheck z `shell=False` i timeoutem.
 3. Pełne parsery AST dla JavaScript i PowerShell.
-4. Import historycznych dzienników Windows Security/PowerShell/Sysmon oraz
-   Linux auditd/journald przez jawne adaptery OS.
+4. Dalsze formaty historii, rotowane audit.log, bezpośredni import binarnego EVTX,
+   rozpoznawanie kolejnych interpreterów i pośrednich łańcuchów uruchomienia.
 5. Limit czasu/CPU dla kosztownych reguł w osobnym procesie izolowanym.

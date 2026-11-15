@@ -13,13 +13,10 @@ authors = [
   { name = "Gabriel Lakowski" },
   { name = "Piotr Kupczyk" },
 ]
-dependencies = [
-  "psutil>=5.9,<8",
-]
+dependencies = []
 
 [project.scripts]
 infa-sled = "main:main"
-infa-sled-monitor = "system_monitor:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -28,6 +25,7 @@ py-modules = [
   "main",
   "config",
   "connections",
+  "history",
   "errors",
   "fileio",
   "ioc",
@@ -38,7 +36,6 @@ py-modules = [
   "reputation",
   "rules",
   "sanitization",
-  "system_monitor",
   "timing",
 ]
 

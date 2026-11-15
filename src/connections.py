@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from errors import InputFileError
 from ioc import extract_iocs
-from models import ConnectionMatch, ConnectionRecord, IOC
+from history import read_history_log
+from models import ConnectionCheck, ConnectionMatch, ConnectionRecord, IOC
 
 TIMESTAMP_RE = re.compile(
     r"\b(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)\b"
@@ -28,34 +29,12 @@ def parse_connection_log(
 ) -> tuple[ConnectionRecord, ...]:
     """Czyta tekstowy/CSV/JSONL log jako dane i wydobywa z niego adresy."""
 
-    resolved = Path(path).expanduser().resolve()
-    if not resolved.is_file():
-        raise InputFileError(f"Log nie istnieje: {resolved}")
-    if resolved.stat().st_size > max_bytes:
-        raise InputFileError(f"Log przekracza limit {max_bytes} bajtow")
-    try:
-        raw = resolved.read_bytes()
-        text = raw.decode("utf-8-sig")
-    except (OSError, UnicodeDecodeError) as error:
-        raise InputFileError(f"Nie mozna odczytac logu jako UTF-8: {error}") from error
-    if len(raw) > max_bytes:
-        raise InputFileError(f"Log przekracza limit {max_bytes} bajtow")
-
-    records: list[ConnectionRecord] = []
-    for index, line in enumerate(text.splitlines()):
-        if index >= max_lines:
-            raise InputFileError(f"Log przekracza limit {max_lines} wierszy")
-        timestamp = extract_timestamp(line)
-        for ioc in extract_iocs(line, "connection-log"):
-            records.append(
-                ConnectionRecord(
-                    timestamp=timestamp,
-                    address=ioc.value,
-                    log_source=str(resolved),
-                    raw=line[:1000],
-                )
-            )
-    return tuple(records)
+    return tuple(
+        ConnectionRecord(event.timestamp, item.value, event.log_source, event.raw,
+                         event.event_type, event.process_key)
+        for event in read_history_log(path, max_bytes, max_lines)
+        for item in extract_iocs(event.address, "connection-log")
+    )
 
 
 def correlate_iocs(
@@ -66,11 +45,15 @@ def correlate_iocs(
 
     lookup = {(item.kind, item.value) for item in iocs}
     matches: list[ConnectionMatch] = []
-    seen: set[tuple[str, str, str | None, str, str]] = set()
+    seen: set[tuple] = set()
     for record in records:
-        candidates = [item for item in lookup if item[1] == record.address]
+        candidates = [item for item in lookup if item[1] == record.address or
+                      (item[0] == "url" and urlsplit(item[1]).hostname == record.address)]
         for kind, value in candidates:
-            key = (kind, value, record.timestamp, record.log_source, record.raw)
+            event_type = record.event_type
+            if kind == "url" and value != record.address:
+                event_type = f"host-{event_type}"
+            key = (kind, value, record.timestamp, record.log_source, record.raw, event_type, record.process_key)
             if key in seen:
                 continue
             seen.add(key)
@@ -81,6 +64,8 @@ def correlate_iocs(
                     timestamp=record.timestamp,
                     log_source=record.log_source,
                     raw=record.raw,
+                    event_type=event_type,
+                    process_key=record.process_key,
                 )
             )
     return tuple(
@@ -89,3 +74,53 @@ def correlate_iocs(
             key=lambda item: (item.ioc_value, item.timestamp or "", item.log_source),
         )
     )
+
+
+def assess_connections(
+    iocs: tuple[IOC, ...],
+    matches: tuple[ConnectionMatch, ...],
+    checked_log_count: int,
+) -> tuple[ConnectionCheck, ...]:
+    """Okresla, czy kazdy IOC znaleziono w poprawnie odczytanych logach."""
+
+    if checked_log_count < 0:
+        raise ValueError("Liczba sprawdzonych logow nie moze byc ujemna")
+    grouped: dict[tuple[str, str], list[ConnectionMatch]] = {}
+    for match in matches:
+        key = (match.ioc_kind, match.ioc_value)
+        grouped.setdefault(key, []).append(match)
+
+    checks: list[ConnectionCheck] = []
+    for ioc in iocs:
+        evidence = grouped.get((ioc.kind, ioc.value), [])
+        types = tuple(sorted({match.event_type for match in evidence}))
+        count = len(evidence)
+        if "connected" in types:
+            status = "confirmed"
+        elif "url-request" in types:
+            status = "request-observed"
+        elif "blocked" in types:
+            status = "blocked"
+        elif "allowed" in types:
+            status = "allowed"
+        elif "dns-query" in types:
+            status = "dns-only"
+        elif any(kind.startswith("host-") for kind in types):
+            status = "host-only"
+        elif count:
+            status = "mentioned-only"
+        elif checked_log_count:
+            status = "not-observed"
+        else:
+            status = "not-checked"
+        checks.append(
+            ConnectionCheck(
+                ioc_kind=ioc.kind,
+                ioc_value=ioc.value,
+                status=status,
+                match_count=count,
+                checked_log_count=checked_log_count,
+                evidence_types=types,
+            )
+        )
+    return tuple(checks)

@@ -6,6 +6,13 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 
 ### Dodano
 
+- jednorazowy odczyt historii Windows/Linux przez `--system-history`,
+- dowody wywołania skryptu przez `--execution-log` i `--original-script-path`,
+- parsery XML zdarzeń Windows, Linux Audit i kontraktu JSONL/CSV,
+- rozróżnienie połączenia, żądania URL, zezwolenia, blokady, DNS i wzmianki,
+- korelację zdarzeń z wywołaniem skryptu przez host i ProcessGuid,
+- schemat raportu 1.2: `execution_check`, `history_sources`, rodzaje dowodów,
+- syntetyczne dowody do demonstracji w `examples/history_demo.jsonl`,
 - lokalny CLI dla PowerShell, JavaScript i Bash,
 - identyfikację języka i trzy skróty kryptograficzne,
 - wbudowane reguły podejrzanych konstrukcji,
@@ -13,12 +20,10 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 - ekstrakcję IOC i korelację z logami,
 - UTC, opcjonalny NTP, VirusTotal i URLhaus,
 - szczegółowy raport terminalowy i wersjonowane pliki JSON/PDF,
-- 71 testów jednostkowych i integracyjnych,
+- testy jednostkowe i integracyjne dla wszystkich funkcji oraz granic wejścia,
 - dokumentację architektury, infrastruktury, bezpieczeństwa i pokrycia wymagań,
 - zasady utrzymania projektu w `AGENTS.md`,
-- monitor aktualnych połączeń TCP/UDP dla Windows i Linux z PID, nazwą procesu,
-  terminalem i atomowym raportem JSONL,
-- obowiązkowe rozbrajanie URL, domen, IPv4 i IPv6 w terminalu, JSON, PDF, JSONL
+- obowiązkowe rozbrajanie URL, domen, IPv4 i IPv6 w terminalu, JSON i PDF
   oraz `deobfuscated.txt`, z zachowaniem korelacji rozbrojonych logów.
 
 ### Przykłady
@@ -31,8 +36,12 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 
 ### Zmieniono
 
-- domyślny katalog wyników z `output` na `report`,
-- dodano tryby `files`, `terminal` i `both`,
+- domyślny katalog wyników z `output`/`report` na `raport`,
+- nazwy generowanych plików na `raport.json` i `raport.pdf`,
+- ustawiono terminal jako tryb domyślny bez zapisu; `--mode raport` włącza
+  pliki, a `--type json|pdf|all` wybiera format,
+- przeniesiono etapy analizy z końcowego raportu do komunikatów postępu
+  pokazywanych podczas wykonywania kolejnych etapów,
 - usunięto generowanie HTML zgodnie z decyzją użytkownika,
 - raport terminalowy sanitizuje niezaufane znaki sterujące,
 - utwardzono `.gitignore`: raporty i sekrety pozostają lokalne, a logi z
@@ -41,5 +50,5 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
   `python src/main.py` oraz `infa-sled`,
 - zastąpiono techniczny plik `infa_sled.py` czytelnym punktem startowym
   `main.py`,
-- dodano punkt wejścia `infa-sled-monitor` oraz zależność `psutil` do
-  przenośnego, tylko do odczytu dostępu do tabel gniazd.
+- raport rozróżnia rodzaje dowodów; sama wzmianka ani zablokowana próba nie
+  potwierdza połączenia. Usunięto osobny monitor połączeń.

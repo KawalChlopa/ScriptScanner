@@ -66,6 +66,8 @@ class ConnectionRecord:
     address: str
     log_source: str
     raw: str
+    event_type: str = "mentioned"
+    process_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,24 +77,63 @@ class ConnectionMatch:
     timestamp: str | None
     log_source: str
     raw: str
+    event_type: str = "mentioned"
+    process_key: str | None = None
+    script_related: bool = False
 
 
 @dataclass(frozen=True, slots=True)
-class LiveConnection:
-    """Pojedyncze polaczenie widoczne w chwili wykonania probki systemu."""
+class ConnectionCheck:
+    """Wynik sprawdzenia jednego IOC w dostepnych logach polaczen."""
 
-    observed_at_utc: str
-    system: str
-    protocol: str
-    family: str
+    ioc_kind: str
+    ioc_value: str
     status: str
-    local_address: str
-    local_port: int
-    remote_address: str | None
-    remote_port: int | None
-    pid: int | None
-    process_name: str | None
-    process_executable: str | None
+    match_count: int
+    checked_log_count: int
+    evidence_types: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class HistoryEvent:
+    event_type: str
+    timestamp: str | None
+    log_source: str
+    address: str = ""
+    image: str = ""
+    command_line: str = ""
+    script_path: str = ""
+    script_sha256: str = ""
+    cwd: str = ""
+    process_key: str | None = None
+    raw: str = ""
+    argv: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionMatch:
+    timestamp: str | None
+    log_source: str
+    identity: str
+    detail: str
+    process_key: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionCheck:
+    status: str = "not-checked"
+    checked_log_count: int = 0
+    matches: tuple[ExecutionMatch, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class HistorySource:
+    name: str
+    status: str
+    event_count: int
+    network_event_count: int = 0
+    execution_event_count: int = 0
+    detail: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,10 +174,13 @@ class AnalysisResult:
     obfuscation_signals: tuple[ObfuscationSignal, ...]
     transformations: tuple[Transformation, ...]
     iocs: tuple[IOC, ...]
+    connection_checks: tuple[ConnectionCheck, ...]
     connection_matches: tuple[ConnectionMatch, ...]
     reputation: tuple[ReputationResult, ...]
     warnings: tuple[str, ...]
     deobfuscated_text: str | None
+    execution_check: ExecutionCheck = ExecutionCheck()
+    history_sources: tuple[HistorySource, ...] = ()
 
 
 def to_primitive(value: Any) -> Any:

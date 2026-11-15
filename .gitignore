@@ -28,6 +28,7 @@ htmlcov/
 # Generated analysis artifacts
 output/
 report/
+raport/
 tmp/
 
 # Runtime logs are local, except committed demonstration fixtures

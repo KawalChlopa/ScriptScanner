@@ -15,6 +15,66 @@ from errors import ReportError
 from models import AnalysisResult, to_primitive
 from sanitization import defang_data, defang_observable, defang_text
 
+CONNECTION_LABELS = {
+    "confirmed": "TAK - zarejestrowano zdarzenie polaczenia",
+    "request-observed": "ZADANIE URL - brak dowodu poprawnej odpowiedzi",
+    "blocked": "ZABLOKOWANA PROBA - nie potwierdza nawiazania polaczenia",
+    "allowed": "DOZWOLONA PROBA - brak dowodu nawiazania polaczenia",
+    "dns-only": "TYLKO DNS - nie potwierdza polaczenia",
+    "host-only": "TYLKO HOST URL - nie potwierdza uzycia pelnego URL",
+    "mentioned-only": "TYLKO WZMIANKA - brak dowodu polaczenia",
+    "not-observed": "NIE WYKRYTO - brak dowodu w sprawdzonych danych",
+    "not-checked": "NIE SPRAWDZONO - brak odpowiednich zdarzen sieciowych",
+}
+
+
+def history_report_lines(result: AnalysisResult) -> list[str]:
+    """Wspolna prezentacja dowodow i ograniczen dla terminala oraz PDF."""
+    lines = [f"SPRAWDZENIE POLACZEN ({len(result.connection_checks)})"]
+    for check in result.connection_checks:
+        value = defang_observable(check.ioc_kind, check.ioc_value)
+        detail = CONNECTION_LABELS.get(check.status, "NIEZNANY STATUS")
+        lines.append(f"  {value}: {detail}; liczba wpisow: {check.match_count}")
+        if check.evidence_types:
+            lines.append(f"    Rodzaje dowodow: {', '.join(check.evidence_types)}")
+    if not result.connection_checks:
+        lines.append("  Brak IOC do sprawdzenia")
+    lines.extend(("", f"DOWODY DOPASOWAN ({len(result.connection_matches)})"))
+    for match in result.connection_matches:
+        lines.append(
+            f"  {defang_observable(match.ioc_kind, match.ioc_value)} @ "
+            f"{match.timestamp or 'brak czasu'} [{match.event_type}]"
+        )
+        lines.append(f"    Log: {match.log_source}")
+        attribution = "ZGODNY PROCES (host + ProcessGuid)" if match.script_related else "NIE USTALONO"
+        lines.append(f"    Zwiazek z wywolaniem badanego skryptu: {attribution}")
+    if not result.connection_matches:
+        lines.append("  Brak")
+    execution = result.execution_check
+    labels = {
+        "confirmed": "TAK - zarejestrowano wywolanie skryptu",
+        "not-observed": "NIE WYKRYTO - brak dowodu w zdarzeniach uruchomienia",
+        "not-checked": "NIE SPRAWDZONO - brak odpowiednich zdarzen uruchomienia",
+    }
+    lines.extend(("", "CZY SKRYPT BYL URUCHAMIANY", f"  {labels.get(execution.status, 'NIEZNANY STATUS')}"))
+    for match in execution.matches:
+        lines.append(f"  {match.timestamp or 'brak czasu'} | {match.identity} | {match.log_source}")
+        lines.append(f"    {match.detail}")
+    lines.extend(("", "ZRODLA HISTORII"))
+    for source in result.history_sources:
+        lines.append(
+            f"  {source.name}: {source.status}; zdarzenia sieciowe: {source.network_event_count}; "
+            f"utworzenia procesu: {source.execution_event_count}. {source.detail}"
+        )
+    if not result.history_sources:
+        lines.append("  Nie podano logow ani --system-history")
+    lines.extend((
+        "", "Brak dowodu nie oznacza, ze zdarzenia nigdy nie bylo.",
+        "Zdarzenie polaczenia nie dowodzi udanej odpowiedzi serwera.",
+        "Wywolanie skryptu nie dowodzi wykonania wszystkich jego instrukcji.",
+    ))
+    return lines
+
 
 def safe_component(value: str) -> str:
     """Ogranicza nazwe elementu sciezki do przenosnego, bezpiecznego podzbioru."""
@@ -30,6 +90,8 @@ def report_payload(result: AnalysisResult) -> dict[str, Any]:
     payload = to_primitive(result)
     for item in payload["iocs"]:
         item["value"] = defang_observable(item["kind"], item["value"])
+    for item in payload["connection_checks"]:
+        item["ioc_value"] = defang_observable(item["ioc_kind"], item["ioc_value"])
     for item in payload["connection_matches"]:
         item["ioc_value"] = defang_observable(item["ioc_kind"], item["ioc_value"])
     payload = defang_data(payload)
@@ -40,8 +102,19 @@ def report_payload(result: AnalysisResult) -> dict[str, Any]:
         ),
         "obfuscation_signal_count": len(result.obfuscation_signals),
         "ioc_count": len(result.iocs),
+        "connection_confirmed_count": sum(
+            item.status == "confirmed" for item in result.connection_checks
+        ),
         "connection_match_count": len(result.connection_matches),
+        "execution_status": result.execution_check.status,
+        "execution_match_count": len(result.execution_check.matches),
     }
+    payload["evidence_limitations"] = [
+        "Brak wpisu nie dowodzi, ze zdarzenia nigdy nie bylo.",
+        "Dopasowanie sciezki nie potwierdza historycznej zawartosci skryptu.",
+        "Wywolanie skryptu nie dowodzi ukonczenia jego wykonania.",
+        "Zdarzenie polaczenia nie dowodzi poprawnej odpowiedzi serwera.",
+    ]
     return payload
 
 
@@ -72,14 +145,6 @@ def render_terminal(result: AnalysisResult) -> str:
         f"SHA-256:    {result.hashes.sha256}",
         f"Start UTC:  {result.started_at.iso_utc} ({result.started_at.source})",
         f"Koniec UTC: {result.completed_at.iso_utc} ({result.completed_at.source})",
-        "",
-        "ETAPY ANALIZY",
-        "  [1/6] Odczytano plik jako niezaufane dane; kodu nie uruchomiono.",
-        "  [2/6] Rozpoznano jezyk i obliczono SHA-256, SHA-1 oraz MD5.",
-        "  [3/6] Zastosowano reguly podejrzanych konstrukcji.",
-        "  [4/6] Sprawdzono obfuskacje i pasywnie przetworzono kopie tekstu.",
-        "  [5/6] Wyodrebniono IOC i porownano je z podanymi logami.",
-        "  [6/6] Zbudowano wynik bez modyfikowania pliku zrodlowego.",
         "",
         f"DETEKCJE ({len(result.findings)})",
     ]
@@ -132,22 +197,14 @@ def render_terminal(result: AnalysisResult) -> str:
     else:
         lines.append("  Brak")
 
-    lines.extend(("", f"KORELACJE Z LOGAMI ({len(result.connection_matches)})"))
-    if result.connection_matches:
-        for match in result.connection_matches:
-            lines.append(
-                f"  {terminal_text(defang_observable(match.ioc_kind, match.ioc_value))} @ "
-                f"{terminal_text(match.timestamp or 'brak czasu')}"
-            )
-            lines.append(f"    Log: {terminal_text(match.log_source)}")
-    else:
-        lines.append("  Brak")
+    lines.append("")
+    lines.extend(terminal_text(line, 2000) for line in history_report_lines(result))
 
     lines.extend(("", "OSTRZEZENIA"))
     lines.extend(f"  {terminal_text(warning)}" for warning in result.warnings)
     if not result.warnings:
         lines.append("  Brak")
-    lines.extend(("", "Analizowany kod nie zostal uruchomiony.", "=" * 78))
+    lines.extend(("", "Analizator nie uruchamial badanego kodu.", "=" * 78))
     return "\n".join(lines) + "\n"
 
 
@@ -186,13 +243,11 @@ def pdf_lines(result: AnalysisResult) -> list[str]:
     for item in result.iocs:
         value = defang_observable(item.kind, item.value)
         lines.append(f"{item.kind}: {value} (zrodla: {', '.join(item.sources)})")
-    lines.extend(("", f"KORELACJE ({len(result.connection_matches)})"))
-    for match in result.connection_matches:
-        value = defang_observable(match.ioc_kind, match.ioc_value)
-        lines.append(f"{value} @ {match.timestamp or 'brak czasu'} w {match.log_source}")
+    lines.append("")
+    lines.extend(history_report_lines(result))
     lines.extend(("", "OSTRZEZENIA"))
     lines.extend(result.warnings or ("Brak",))
-    lines.extend(("", "Analizowany kod nie zostal uruchomiony."))
+    lines.extend(("", "Analizator nie uruchamial badanego kodu."))
     wrapped: list[str] = []
     for line in lines:
         wrapped.extend(textwrap.wrap(line, width=92, replace_whitespace=False) or [""])
@@ -300,7 +355,7 @@ def write_reports(
         renderer = renderers.get(report_format)
         if renderer is None:
             raise ReportError(f"Nieobslugiwany format raportu: {report_format}")
-        written.append(atomic_write(directory / f"report.{report_format}", renderer(result)))
+        written.append(atomic_write(directory / f"raport.{report_format}", renderer(result)))
     if result.deobfuscated_text is not None:
         written.append(
             atomic_write(

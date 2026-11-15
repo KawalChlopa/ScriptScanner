@@ -9,7 +9,7 @@ Analizowany kod nigdy nie jest wykonywany. Program nie używa `eval`, `exec`,
 ## Granice zaufania
 
 Niezaufane są: skrypt, nazwa i ścieżka pliku, logi, ciągi po dekodowaniu,
-odpowiedzi API, nazwy IOC oraz nazwy i ścieżki lokalnych procesów. Zaufana jest
+odpowiedzi API oraz nazwy IOC. Zaufana jest
 konfiguracja operatora i lokalny interpreter Pythona. Raport terminalowy usuwa
 znaki sterujące, raport PDF transliteruje i escapuje znaki sterujące składnią,
 a nazwy katalogów są sanitowane.
@@ -27,30 +27,31 @@ a nazwy katalogów są sanitowane.
 | ujawnienie IOC stronie trzeciej | sieć wyłączona domyślnie, jawna flaga | zapytany IOC trafia do dostawcy |
 | fałszywe poczucie bezpieczeństwa | raport i README opisują ograniczenia | reguły nie wykrywają wszystkich zagrożeń |
 | manipulacja czasem | UTC, opcjonalny NTP, oznaczony fallback | NTP nie jest kryptograficznie uwierzytelniony |
-| niepełna telemetria połączeń | jawny model migawkowy, PID i uprawnienia mogą być niedostępne | krótkie połączenia między próbkami mogą zniknąć |
-| ujawnienie lokalnej aktywności | raporty monitora w ignorowanym katalogu `report/` | JSONL zawiera adresy, PID i ścieżki programów |
-| nadmierne uprawnienia monitora | działa bez podnoszenia uprawnień; administrator/root jest opcjonalny | wyższe uprawnienia zwiększają skutki błędu zależności |
+| błędna interpretacja dowodu | osobne rodzaje zdarzeń, źródła i zakres odczytu | log może być niepełny, zmieniony lub nadpisany |
+| wstrzyknięcie polecenia przez log | dane nigdy nie trafiają do poleceń; stałe adaptery `wevtutil qe`/`journalctl`, `shell=False` | lokalny system i narzędzia muszą być zaufane |
+| XML entity expansion | odrzucanie DTD/ENTITY i limit pliku | parser nie uwierzytelnia źródła logu |
 | przypadkowe kliknięcie IOC | rozbrajanie URL, domen oraz IPv4/IPv6 we wszystkich wyjściach | użytkownik może ręcznie odtworzyć adres |
 
-## Monitor systemowy
+## Logi połączeń
 
-Monitor korzysta wyłącznie z odczytu lokalnych tabel gniazd przez `psutil`.
-Nie wykonuje przechwytywania pakietów, nie zmienia zapory, nie zamyka połączeń i
-nie wysyła danych. Na Linuksie część połączeń może zostać pominięta bez roota;
-na obu systemach proces może zakończyć się pomiędzy odczytem gniazda i nazwy.
+Operator wskazuje pliki przez `--connection-log`/`--execution-log` albo
+włącza jednorazowy odczyt systemu przez `--system-history`. Program nie
+podnosi uprawnień, nie zmienia audytu i nie instaluje usług. Brak dostępu
+do źródła jest widoczny w raporcie. Narzędzia mają timeout i limity wyjścia.
+Pliki tymczasowe historii mogą zawierać wrażliwe dane z dzienników; dostęp
+do lokalnego katalogu tymczasowego i katalogu raportu musi być chroniony.
 
-Raport `connections.jsonl` może ujawniać wewnętrzne adresy, uruchomione programy
-i ścieżki użytkownika. Nie należy umieszczać go w publicznym repozytorium.
-`report/` jest z tego powodu ignorowany przez Git.
+Status `NIE WYKRYTO` opisuje brak dowodu w rozpoznanych danych. DNS, blokada,
+zezwolenie i sama wzmianka nie potwierdzają połączenia. Wywołanie interpretera
+z argumentem pliku nie gwarantuje odczytu skryptu ani ukończenia działania.
+Ścieżka nie potwierdza historycznej treści pliku; hash procesu Sysmon nie jest
+hashem skryptu. Logi podane przez użytkownika są dowodem tylko w granicach
+ich wiarygodności; parser nie weryfikuje autentyczności zdarzeń.
 
 Rozbrajanie jest obowiązkową granicą wyjściową: URL używa `hxxp`/`hxxps`, kropki
 w domenach i IPv4 mają postać `[.]`, a dwukropki IPv6 `[:]`. Obejmuje terminal,
-JSON, PDF, JSONL monitora oraz `deobfuscated.txt`. Normalizacja wejścia służąca
+JSON, PDF oraz `deobfuscated.txt`. Normalizacja wejścia służąca
 korelacji odbywa się wyłącznie w pamięci.
-
-Monitor nie jest źródłem pełnej historii. Brak bieżącego rekordu ani brak wpisu
-w dzienniku nie dowodzi, że program nigdy nie działał. Audyt historyczny musi
-być włączony przed zdarzeniem i mieć odpowiednią retencję.
 
 ## Prywatność integracji reputacyjnych
 

@@ -1,0 +1,4 @@
+{"event_type":"process-start","timestamp":"2026-11-15T10:00:00Z","image":"powershell.exe","argv":["powershell.exe","-File","C:\\demo\\suspicious_obfuscated.ps1"],"host":"DEMO-PC","process_guid":"demo-process-1"}
+{"event_type":"connected","timestamp":"2026-11-15T10:00:01Z","address":"192.0.2.10","host":"DEMO-PC","process_guid":"demo-process-1"}
+{"event_type":"blocked","timestamp":"2026-11-15T10:00:02Z","address":"https://bad.example/a","host":"DEMO-PC","process_guid":"another-demo-process"}
+{"event_type":"dns-query","timestamp":"2026-11-15T10:00:03Z","address":"bad.example","host":"DEMO-PC","process_guid":"demo-process-1"}

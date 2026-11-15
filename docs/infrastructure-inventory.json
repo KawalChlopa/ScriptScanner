@@ -1,39 +1,42 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.4",
   "runtime": {
     "language": "Python",
     "minimum_version": "3.11",
-    "third_party_runtime_dependencies": [
-      {
-        "name": "psutil",
-        "version": ">=5.9,<8",
-        "purpose": "read-only system connection and process metadata"
-      }
-    ]
+    "third_party_runtime_dependencies": []
   },
   "entrypoints": [
     "infa-sled",
-    "python src/main.py",
-    "infa-sled-monitor",
-    "python src/system_monitor.py"
+    "python src/main.py"
   ],
   "storage": {
     "database": null,
-    "output_pattern": "report/<source>-<language>__<readable-utc-timestamp>__sha256-<8-char-prefix>/",
+    "output_pattern": "raport/<source>-<language>__<readable-utc-timestamp>__sha256-<8-char-prefix>/",
+    "report_filenames": ["raport.json", "raport.pdf"],
     "automatic_retention": false,
     "atomic_writes": true,
-    "presentation_modes": ["files", "terminal", "both"],
-    "file_formats": ["json", "pdf", "jsonl"],
-    "monitor_output_pattern": "report/system-connections__<readable-utc-timestamp>__<system>/connections.jsonl"
+    "presentation_modes": ["terminal-default", "raport"],
+    "report_type_values": ["json", "pdf", "all"],
+    "default_presentation": "terminal",
+    "report_type_default": "all",
+    "file_formats": ["json", "pdf"]
   },
-  "system_monitor": {
-    "supported_operating_systems": ["windows", "linux"],
-    "connection_kinds": ["tcp", "udp", "ipv4", "ipv6"],
-    "default_duration_seconds": 30,
-    "default_interval_seconds": 1,
-    "historical_event_log_import": false,
-    "packet_capture": false,
-    "modifies_connections": false
+  "connection_correlation": {
+    "input_formats": ["text", "csv", "jsonl", "windows-event-xml", "linux-audit"],
+    "automatic_system_log_collection": false,
+    "opt_in_system_flag": "--system-history",
+    "statuses": ["confirmed", "request-observed", "allowed", "blocked", "dns-only", "host-only", "mentioned-only", "not-observed", "not-checked"]
+  },
+  "historical_evidence": {
+    "result_schema_version": "1.2",
+    "windows": {"tool": "wevtutil qe", "sysmon_event_ids": [1, 3, 22], "security_event_ids": [4688, 5156, 5157]},
+    "linux": {"tool": "journalctl --system -o json", "audit_file": "/var/log/audit/audit.log", "supported": ["outbound-ufw", "audit-execve", "sysmon-xml-in-message"]},
+    "execution_identity": ["exact-script-path", "explicit-script-sha256"],
+    "process_correlation": ["host", "ProcessGuid"],
+    "execution_statuses": ["confirmed", "not-observed", "not-checked"],
+    "continuous_monitor": false,
+    "changes_audit_configuration": false,
+    "subprocess_shell": false
   },
   "network_integrations": [
     {
@@ -65,10 +68,11 @@
     "connection_log_lines": 100000,
     "reputation_response_bytes": 1000000,
     "default_network_timeout_seconds": 5,
-    "monitor_duration_seconds": 86400,
-    "monitor_interval_min_seconds": 0.1,
-    "monitor_interval_max_seconds": 60,
-    "monitor_events_per_session": 100000
+    "history_command_timeout_seconds": 10,
+    "history_stdout_bytes": 10000000,
+    "history_stderr_bytes": 65536,
+    "history_default_hours": 24,
+    "history_default_max_events": 1000
   },
   "ci": {
     "provider": "GitHub Actions",

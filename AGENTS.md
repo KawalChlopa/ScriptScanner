@@ -7,10 +7,10 @@ Te zasady obowiązują w całym repozytorium.
 ## Cel projektu
 
 Repozytorium zawiera lokalny system CLI do pasywnej analizy skryptów PowerShell,
-JavaScript i Bash oraz monitor aktualnych połączeń TCP/UDP dla Windows i Linux.
-System ma wykrywać podejrzane konstrukcje i obfuskację, bezpiecznie dekodować
-wybrane literały, wyodrębniać IOC, korelować je z dostarczonymi lub zebranymi
-logami oraz generować raport terminalowy i pliki JSON/PDF/JSONL.
+JavaScript i Bash. System ma wykrywać podejrzane konstrukcje i obfuskację,
+bezpiecznie dekodować wybrane literały, wyodrębniać IOC, sprawdzać je w jawnie
+dostarczonych logach lub opcjonalnie odczytanych dziennikach systemu, sprawdzać
+dowody wywołania skryptu oraz generować raport terminalowy i pliki JSON/PDF.
 
 ## Niezmienniki bezpieczeństwa
 
@@ -25,10 +25,14 @@ logami oraz generować raport terminalowy i pliki JSON/PDF/JSONL.
    opcji użytkownika i jest opisana w `docs/SECURITY.md`.
 6. Limity rozmiaru, czasu i ilości danych muszą być walidowane na granicach
    systemu.
-7. Monitor systemowy jest obserwatorem: nie otwiera, nie blokuje i nie modyfikuje
-   połączeń ani procesów.
-8. Wszystkie URL, domeny i adresy IP prezentowane w terminalu albo zapisywane w
+7. Wszystkie URL, domeny i adresy IP prezentowane w terminalu albo zapisywane w
    raportach muszą być rozbrojone; surowe wartości służą wyłącznie obliczeniom.
+8. Wzmianka, DNS, zezwolenie zapory i zablokowana próba nie są dowodem połączenia.
+   Zdarzenie utworzenia interpretera z argumentem skryptu potwierdza wywołanie,
+   nie ukończenie skryptu. Hash obrazu interpretera nie jest hashem skryptu.
+9. Odczyt systemu wymaga `--system-history`; nie zmieniaj konfiguracji audytu,
+   nie instaluj usług i nie uruchamiaj stałego monitora. Tylko zaufane narzędzia
+   odczytu (`wevtutil qe`, `journalctl`) z `shell=False`, timeoutem i limitami.
 
 ## Zasady implementacji
 

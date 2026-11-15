@@ -14,8 +14,8 @@ instalacji i nie są jednocześnie dostępne na wszystkich systemach.
 Rdzeń analizy statycznej używa wyłącznie biblioteki standardowej Pythona.
 Detekcje są stabilnymi regułami Regex, a PDF jest generowany lokalnie.
 Narzędzia zewnętrzne mogą być później dodane jako opcjonalne adaptery zgodne z
-kontraktem `Finding`. Osobny monitor systemowy używa `psutil`; decyzję i granicę
-opisuje ADR-0003.
+kontraktem `Finding`. Korelacja połączeń operuje wyłącznie na jawnie podanych
+plikach tekstowych, CSV lub JSONL.
 
 ## Konsekwencje
 

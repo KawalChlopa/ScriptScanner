@@ -2,10 +2,9 @@
 
 ## Kontekst
 
-Infa-Sled jest lokalnym programem z dwoma punktami wejścia: analizatorem plików
-oraz monitorem bieżących połączeń. Granicą zaufania jest proces Pythona: plik
-skryptu, logi i dane systemowe są niezaufanymi danymi, a katalog wynikowy jest
-jedynym miejscem zapisu. Rdzeń nie wymaga usług ani bazy danych.
+Infa-Sled jest lokalnym analizatorem plików. Granicą zaufania jest proces
+Pythona: plik skryptu i jawnie podane logi są niezaufanymi danymi, a katalog
+wynikowy jest jedynym miejscem zapisu. Rdzeń nie wymaga usług ani bazy danych.
 
 ## Przepływ danych
 
@@ -19,8 +18,11 @@ flowchart TD
     E --> F
     C --> G[Ekstrakcja IOC]
     E --> G
-    H[Jawnie podane logi] --> I[Parser tekstu z limitami]
-    I --> J[Korelacja dokładna]
+    H[Jawnie podane logi] --> I[Parser zdarzeń z limitami]
+    HS[Opcjonalny jednorazowy odczyt systemu] --> I
+    I --> J[Korelacja IOC i klasyfikacja dowodu]
+    I --> EX[Dowody wywołania skryptu]
+    EX --> M
     G --> J
     G -. tylko z flagą sieciową .-> K[VT lub URLhaus]
     L[Zegar systemowy / opcjonalny NTP] --> M[Agregacja wyniku]
@@ -32,11 +34,6 @@ flowchart TD
     M --> O[JSON]
     M --> P[PDF]
     M --> Q[Kopia po defuskacji]
-    R[Windows lub Linux] --> S[psutil: migawka TCP/UDP]
-    S --> T[Normalizacja i przypisanie PID/procesu]
-    T --> U[Terminal]
-    T --> V[connections.jsonl]
-    V --> I
 ```
 
 ## Moduły
@@ -49,30 +46,34 @@ flowchart TD
 | `obfuscation.py` | sygnały i bezpieczne transformacje literałów | tekst | sygnały, kopia, transformacje |
 | `ioc.py` | URL, domeny, IPv4 i normalizacja | tekst | `IOC[]` |
 | `sanitization.py` | rozbrajanie URL, domen i IPv4/IPv6 przed wyjściem | tekst/struktura | bezpieczna prezentacja |
-| `connections.py` | odczyt logów i korelacja | logi, IOC | `ConnectionMatch[]` |
-| `system_monitor.py` | bieżące migawki TCP/UDP i raport JSONL | tabele gniazd systemu | `LiveConnection[]` |
+| `connections.py` | odczyt logów, korelacja i status każdego IOC | logi, IOC | `ConnectionCheck[]`, `ConnectionMatch[]` |
+| `history.py` | import XML/JSONL/CSV/Audit, adaptery systemu, identyfikacja wywołania | pliki lub jawny odczyt OS | `HistoryEvent[]`, `HistorySource[]`, `ExecutionCheck` |
 | `timing.py` | UTC i opcjonalny NTP | konfiguracja | `TimestampInfo` |
 | `reputation.py` | opcjonalny odczyt reputacji | IOC | `ReputationResult[]` |
-| `pipeline.py` | kolejność etapów i odporność | plik, konfiguracja | `AnalysisResult` |
+| `pipeline.py` | kolejność etapów, odporność i callback postępu | plik, konfiguracja | `AnalysisResult` |
 | `reporting.py` | prezentacja, serializacja i atomowy zapis | wynik | terminal, JSON, PDF, tekst |
 | `main.py` | główny interfejs użytkownika i kody wyjścia | argumenty | komunikaty i artefakty |
 | `models.py` | kontrakty między modułami | - | dataclasses |
 
-Monitor i analizator są rozdzielone. Monitor nie importuje ani nie uruchamia
-skryptu, a analizator nie wymaga uprawnień systemowych. Jedynym punktem
-połączenia jest plik `connections.jsonl`, który parser logów traktuje jak każde
-inne niezaufane wejście.
-
 ## Kontrakty
 
-- `AnalysisResult.schema_version` ma obecnie wartość `1.0`.
+- `AnalysisResult.schema_version` ma obecnie wartość `1.2`.
 - Kolekcje w modelach są krotkami, co ogranicza przypadkową mutację.
 - Każda detekcja ma stabilny `rule_id`, ważność, linię i fragment dowodu.
 - IOC przechowuje pochodzenie: `original`, `deobfuscated` lub
   `connection-log`.
 - Wyniki pośrednie i raporty nigdy nie nadpisują źródła.
-- `LiveConnection` opisuje obserwację, nie niepodważalny zapis pakietu; brak
-  rekordu nie oznacza braku wcześniejszego połączenia.
+- Domyślny katalog wynikowy to `raport/`; pliki raportów to `raport.json` i `raport.pdf`.
+- `ConnectionCheck.status` rozróżnia połączenie, URL request, DNS, zezwolenie,
+  blokadę, host URL i wzmiankę. Pełny kontrakt opisuje `CONNECTION_CORRELATION.md`.
+- `execution_check` zawiera dowody wywołania skryptu po ścieżce lub hashu skryptu.
+  `history_sources` opisuje pokrycie źródeł i błędy. Brak zdarzeń odpowiedniego
+  rodzaju oznacza `not-checked`, a nie negatywny wynik historyczny.
+- Powiązanie sieci z wywołaniem skryptu wymaga hosta i `ProcessGuid`; surowe PID
+  nie są używane do tego celu. Dopasowanie hosta URL nie potwierdza całego URL.
+- Postęp sześciu etapów jest emitowany podczas analizy przez opcjonalny callback
+  i prezentowany przez `main.py` przed końcowym wynikiem; nie jest częścią
+  raportu terminalowego ani plikowego.
 - Surowe IOC istnieją tylko w modelu roboczym. Granica wyjściowa rozbraja je do
   `hxxp(s)`, `[.]` i `[:]`; parser wejściowy normalizuje te znaczniki tylko w
   pamięci, aby zachować możliwość korelacji.

@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import URLError
 
-from connections import correlate_iocs, extract_timestamp, parse_connection_log
+from connections import assess_connections, correlate_iocs, extract_timestamp, parse_connection_log
 from errors import InputFileError
-from models import ConnectionRecord, IOC, TimestampInfo
+from models import ConnectionMatch, ConnectionRecord, IOC, TimestampInfo
 from reputation import (
     check_reputation,
     parse_urlhaus,
@@ -68,6 +68,20 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0].ioc_kind, "ip")
         self.assertEqual(correlate_iocs(iocs, (ConnectionRecord(None, "1.1.1.1", "x", "x"),)), ())
+
+    def test_assess_connections_distinguishes_confirmed_missing_and_unchecked(self) -> None:
+        iocs = (
+            IOC("ip", "8.8.8.8", ("original",)),
+            IOC("domain", "missing.example", ("original",)),
+        )
+        match = ConnectionMatch("ip", "8.8.8.8", None, "log", "dst=8.8.8.8", "connected")
+        checked = assess_connections(iocs, (match,), checked_log_count=1)
+        self.assertEqual([item.status for item in checked], ["confirmed", "not-observed"])
+        self.assertEqual(checked[0].match_count, 1)
+        unchecked = assess_connections(iocs, (), checked_log_count=0)
+        self.assertTrue(all(item.status == "not-checked" for item in unchecked))
+        with self.assertRaises(ValueError):
+            assess_connections(iocs, (), checked_log_count=-1)
 
 
 class FakeSocket:
