@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "runtime": {
+    "language": "Python",
+    "minimum_version": "3.11",
+    "third_party_runtime_dependencies": []
+  },
+  "entrypoints": [
+    "infa-sled",
+    "python -m infa_sled"
+  ],
+  "storage": {
+    "database": null,
+    "output_pattern": "report/<source>-<language>__<readable-utc-timestamp>__sha256-<8-char-prefix>/",
+    "automatic_retention": false,
+    "atomic_writes": true,
+    "presentation_modes": ["files", "terminal", "both"],
+    "file_formats": ["json", "pdf"]
+  },
+  "network_integrations": [
+    {
+      "name": "NTP",
+      "default_enabled": false,
+      "protocol": "UDP/123",
+      "sends_script": false
+    },
+    {
+      "name": "VirusTotal API v3",
+      "default_enabled": false,
+      "protocol": "HTTPS",
+      "host": "www.virustotal.com",
+      "secret_header": "x-apikey",
+      "sends": "IOC only"
+    },
+    {
+      "name": "URLhaus API v1",
+      "default_enabled": false,
+      "protocol": "HTTPS",
+      "host": "urlhaus-api.abuse.ch",
+      "secret_header": "Auth-Key",
+      "sends": "IOC only"
+    }
+  ],
+  "limits": {
+    "script_bytes": 5000000,
+    "connection_log_bytes": 10000000,
+    "connection_log_lines": 100000,
+    "reputation_response_bytes": 1000000,
+    "default_network_timeout_seconds": 5
+  },
+  "ci": {
+    "provider": "GitHub Actions",
+    "operating_systems": ["ubuntu-latest", "windows-latest"],
+    "python_versions": ["3.11", "3.12"],
+    "network_features_in_tests": false
+  }
+}

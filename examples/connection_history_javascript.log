@@ -1,0 +1,3 @@
+2026-11-15T11:00:00Z action=blocked url=https://bad-js.example/a source=demo-js
+2026-11-15T11:05:00Z action=blocked destination_ip=198.51.100.20 source=demo-js
+2026-11-15T11:10:00Z action=allowed destination_ip=192.0.2.200 source=control

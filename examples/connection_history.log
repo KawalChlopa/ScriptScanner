@@ -1,0 +1,3 @@
+2026-11-15T10:00:00Z action=allowed url=https://bad.example/a source=demo
+2026-11-15T10:05:00Z action=blocked destination_ip=192.0.2.10 source=demo
+2026-11-15T10:10:00Z action=allowed destination_ip=203.0.113.55 source=control

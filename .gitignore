@@ -1,0 +1,57 @@
+# Python bytecode and package artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+wheelhouse/
+
+# Virtual environments and local Python configuration
+.venv/
+venv/
+env/
+.python-version
+
+# Test, type-checker and linter caches
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.hypothesis/
+.tox/
+.nox/
+
+# Generated analysis artifacts
+output/
+report/
+tmp/
+
+# Runtime logs are local, except committed demonstration fixtures
+*.log
+!examples/**/*.log
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local source specification contains student personal data
+Informatyka_sledcza.pdf
+

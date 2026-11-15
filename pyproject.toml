@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infa-sled"
+version = "0.1.0"
+description = "Lokalna, pasywna analiza potencjalnie szkodliwych skryptow"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Gabriel Lakowski" },
+  { name = "Piotr Kupczyk" },
+]
+dependencies = []
+
+[project.scripts]
+infa-sled = "infa_sled.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S324"]
+
+[tool.coverage.run]
+branch = true
+source = ["infa_sled"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
