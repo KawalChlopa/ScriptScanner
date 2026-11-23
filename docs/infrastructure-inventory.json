@@ -10,6 +10,14 @@
     "infa-sled",
     "python src/main.py"
   ],
+  "windows_installer": {
+    "entrypoint": "install.cmd",
+    "prerequisites": ["Windows x64", "py launcher", "Windows PowerShell"],
+    "python_extra": "static-analysis",
+    "shellcheck_version": "0.11.0",
+    "shellcheck_location": "%LOCALAPPDATA%\\Programs\\ShellCheck",
+    "path_scope": "user"
+  },
   "storage": {
     "database": null,
     "output_pattern": "raport/<source>-<language>__<readable-utc-timestamp>__sha256-<8-char-prefix>/",

@@ -71,3 +71,8 @@ W CI te testy działają w osobnym zadaniu na Ubuntu. Każda własna reguła sil
 ma przykład pozytywny i negatywny. Dane trafiają do adapterów jako tekst
 lub bajty. Testy obejmują również błąd składni Esprimy, blokadę dyrektyw
 PowerShell oraz próbę wyciszenia diagnostyki ShellCheck z treści próbki.
+
+Na Windows można sprawdzić `install.cmd` oraz wykonać z nowego CMD polecenie
+`py src/main.py examples/engine_check.sh`. Wyniki `YARA-SH-001`,
+`SEMGREP-SH-001` i `SC2086` potwierdzają działanie tych trzech adapterów.
+Pozostałe próbki `engine_check.*` i oczekiwane trafienia opisano w README.

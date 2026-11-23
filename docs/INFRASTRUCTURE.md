@@ -45,6 +45,12 @@ limitu wyjścia między kontrolami jest możliwe. Semgrep ma ponadto jeden proce
 roboczy, 5 s na regułę oraz limit pamięci 512 MB. Prywatne katalogi robocze
 pod katalogiem wynikowym są usuwane po zakończeniu.
 
+Na Windows x64 `install.cmd` uruchamia `install.ps1`. Wymaga dostępnego
+launchera `py` i Windows PowerShell. Instaluje pakiet dla domyślnego Pythona
+launchera. Gdy ShellCheck jest niedostępny, instaluje wydanie 0.11.0
+w `%LOCALAPPDATA%\Programs\ShellCheck` i dopisuje katalog do `PATH`
+użytkownika. Nowe procesy CMD korzystają z utrwalonej ścieżki.
+
 Opcjonalny `--system-history` używa narzędzi lokalnych: Windows `wevtutil qe`
 (Sysmon 1/3/22, Security 4688/5156/5157), Linux `journalctl` i odczyt bieżącego
 `/var/log/audit/audit.log`. Bez dodatkowych pakietów, usług ani instalacji.

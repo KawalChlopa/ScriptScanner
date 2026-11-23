@@ -35,6 +35,11 @@ a nazwy katalogów są sanitowane.
 
 ## Silniki statyczne
 
+Instalator Windows pobiera zależności na jawne żądanie operatora. Archiwum
+ShellCheck jest pobierane z przypiętego wydania i weryfikowane przez SHA-256.
+Instalator zmienia `PATH` tylko dla bieżącego użytkownika. Ustawienie
+polityki wykonania dotyczy procesu uruchomionego przez `install.cmd`.
+
 - YARA kompiluje wyłącznie reguły projektu, z wyłączonymi dyrektywami
   `include`. Esprima odczytuje drzewo składni JavaScript.
 - Semgrep dostaje pojedynczą kopię analizowanego pliku i lokalne reguły

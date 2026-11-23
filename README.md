@@ -45,6 +45,12 @@ src/
 
 ## Szybki start
 
+Na Windows x64, jeśli działa już polecenie `py`, uruchom z CMD
+`install.cmd`. Instalator dodaje zależności do Pythona wybranego przez
+`py`, a w razie potrzeby pobiera ShellCheck i dodaje go do `PATH`
+użytkownika. Następnie otwórz nowe okno CMD i uruchom
+`py src/main.py examples/engine_check.sh`.
+
 Instalacja:
 
 ```powershell
@@ -114,6 +120,32 @@ Silniki korzystają z lokalnych reguł bez pobierania konfiguracji w trakcie
 skanu. Pliki robocze pod `--output` są usuwane po przebiegu. Esprima może
 zgłosić częściową analizę przy nowszej składni JavaScript, a parser
 PowerShell pomija tekst z możliwymi dyrektywami odczytu zasobów.
+
+### Sprawdzenie silników na próbkach
+
+Po instalacji silników przekaż pliki analizatorowi:
+
+```powershell
+python src/main.py examples/engine_check.js
+python src/main.py examples/engine_check.sh
+python src/main.py examples/engine_check.ps1
+```
+
+W sekcji **Silniki analizy statycznej** każdy silnik przypisany do pliku
+powinien mieć stan `ZAKONCZONO` dla `original`. W sekcji **Detekcje**
+sprawdź poniższe identyfikatory. Próbki zawierają funkcje bez wywołań
+oraz komentarze dobrane do sygnatur YARA.
+
+| Próbka | Oczekiwane identyfikatory |
+|---|---|
+| `engine_check.js` | `YARA-JS-001`, `SEMGREP-JS-001`, `ESPRIMA-JS-001` |
+| `engine_check.sh` | `YARA-SH-001`, `SEMGREP-SH-001`, `SC2086` |
+| `engine_check.ps1` | `YARA-PS-001`, `PSAST-001`, `PSAST-002` |
+
+Przykład kontrolny `examples/benign.js` pozwala zobaczyć zakończony
+przebieg bez dopasowań. Zapis JSON włączysz parametrami
+`--mode raport --type json`. Pole `engine_runs` zawiera stany silników,
+a `findings` zawiera identyfikatory reguł.
 
 ## Korelacja z logiem
 

@@ -4,6 +4,7 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 
 ## Niewydane
 
+- Dodano instalator Windows i próbki do sprawdzenia pięciu silników z CLI.
 - Dodano lokalne skanowanie przez YARA, Semgrep, ShellCheck, Esprimę i
   PowerShell Parser API, także dla kopii po defuskacji.
 - Raporty pokazują status każdego uruchomionego silnika. JSON 1.3 dodaje
