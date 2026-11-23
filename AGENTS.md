@@ -72,3 +72,15 @@ python -m compileall -q src tests
 
 Sprawdź także, że przykładowy skrypt jest analizowany bez jego wykonania, a
 raporty powstają poza katalogiem źródłowym.
+
+## Commit i push po ukończeniu zadania
+
+Po ukończeniu większej zmiany i pomyślnej weryfikacji utwórz commit
+z opisem zmiany, a następnie wypchnij go na zdalną gałąź śledzoną przez
+bieżącą gałąź. Jeśli gałąź nie ma ustawionej zdalnej gałęzi śledzonej,
+użyj `git push -u origin HEAD`.
+
+Uwzględnij w commicie wyłącznie pliki związane z zadaniem. Respektuj
+polecenia użytkownika dotyczące zapisu zmian i ochronę gałęzi. Jeśli push
+zostanie odrzucony, zgłoś przyczynę i zachowaj lokalny commit. Nie używaj
+force push.

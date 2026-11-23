@@ -21,6 +21,7 @@ funkcji sieciowych. NTP i HTTPS są zastępowane kontrolowanymi atrapami.
 | `models.py` | `to_primitive` | `ModelsTests` |
 | `fileio.py` | skróty, dekodowanie, język, mtime, odczyt | `FileIoTests` |
 | `rules.py` | reguły, linie, fragmenty, skanowanie | `RulesTests` |
+| `engines.py`, `engine_rules.py` | reguły pięciu silników, bezpieczne argumenty, limit wejścia i wyjścia, timeout, awarie, stan w raporcie | `EngineAdapterTests`, `InstalledEngineTests` |
 | `obfuscation.py` | współczynnik, Base64, sygnały, 3 transformacje | `ObfuscationTests` |
 | `ioc.py` | normalizacja, ekstrakcja, scalanie | `IocTests` |
 | `sanitization.py` | URL, domeny, IPv4/IPv6, struktury i normalizacja wejścia | `SanitizationTests` |
@@ -55,3 +56,18 @@ Nowa reguła wymaga co najmniej przykładu pozytywnego i negatywnego dla języka
 Nowy format raportu wymaga walidacji struktury i zapisu atomowego. Adapter
 narzędzia zewnętrznego wymaga testu timeoutu, kodu błędu, limitu stdout/stderr i
 potwierdzenia `shell=False`.
+
+## Testy z rzeczywistymi silnikami
+
+Po instalacji `.[static-analysis]` i udostępnieniu `shellcheck` oraz `pwsh`
+lub `powershell.exe` w `PATH` uruchom:
+
+```powershell
+$env:TEST_STATIC_ENGINES = '1'
+python -m unittest tests.test_engines -v
+```
+
+W CI te testy działają w osobnym zadaniu na Ubuntu. Każda własna reguła silnika
+ma przykład pozytywny i negatywny. Dane trafiają do adapterów jako tekst
+lub bajty. Testy obejmują również błąd składni Esprimy, blokadę dyrektyw
+PowerShell oraz próbę wyciszenia diagnostyki ShellCheck z treści próbki.

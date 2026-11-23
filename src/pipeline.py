@@ -8,6 +8,7 @@ from pathlib import Path
 
 from config import AnalysisConfig
 from connections import assess_connections, correlate_iocs
+from engines import scan_engines
 from history import assess_execution, collect_system_history, read_history_log, source_summary
 from errors import InputFileError
 from fileio import read_script
@@ -59,11 +60,19 @@ def analyze_file(
     announce(2, "Wykrywanie obfuskacji i bezpieczna defuskacja kopii")
     signals = detect_obfuscation(source.text)
     transformed_text, transformations = deobfuscate(source.text)
-    announce(3, "Sprawdzanie regul podejrzanych konstrukcji")
-    original_findings = scan_suspicious(source.text, source.language)
-    transformed_findings = (
-        scan_suspicious(transformed_text, source.language) if transformations else ()
+    announce(3, "Sprawdzanie regul i lokalnych silnikow analizy statycznej")
+    engine_findings, engine_runs = scan_engines(
+        source.text, source.raw, source.language, settings.output_dir, "original",
     )
+    original_findings = scan_suspicious(source.text, source.language) + engine_findings
+    transformed_findings = ()
+    if transformations:
+        decoded_findings, decoded_runs = scan_engines(
+            transformed_text, transformed_text.encode("utf-8"), source.language,
+            settings.output_dir, "deobfuscated",
+        )
+        engine_runs += decoded_runs
+        transformed_findings = scan_suspicious(transformed_text, source.language) + decoded_findings
     findings = merge_findings(original_findings, transformed_findings)
     announce(4, "Ekstrakcja i normalizacja IOC")
     original_iocs = extract_iocs(source.text, "original")
@@ -122,7 +131,7 @@ def analyze_file(
     if settings.ntp_server and not completed.synchronized and not any("NTP" in item for item in warnings):
         warnings.append("Synchronizacja NTP nie powiodla sie; uzyto zegara systemowego")
     return AnalysisResult(
-        schema_version="1.2",
+        schema_version="1.3",
         source=SourceMetadata(
             path=str(source.path),
             name=source.path.name,
@@ -144,6 +153,7 @@ def analyze_file(
         deobfuscated_text=transformed_text if transformations else None,
         execution_check=execution_check,
         history_sources=tuple(history_sources),
+        engine_runs=engine_runs,
     )
 
 

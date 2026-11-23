@@ -179,7 +179,7 @@ class EvidenceTests(unittest.TestCase):
         payload = render_json(result).decode()
         self.assertNotIn("https://bad.example", payload)
         self.assertNotIn("192.0.2.10", payload)
-        self.assertIn('"schema_version": "1.2"', payload)
+        self.assertIn('"schema_version": "1.3"', payload)
 
 
 class SystemHistoryTests(unittest.TestCase):

@@ -14,7 +14,7 @@ flowchart TD
     B --> C[Identyfikacja języka i skróty]
     C --> D[Detekcja obfuskacji]
     D --> E[Pasywna defuskacja kopii]
-    C --> F[Reguły statyczne]
+    C --> F[Reguły wbudowane i silniki statyczne]
     E --> F
     C --> G[Ekstrakcja IOC]
     E --> G
@@ -43,6 +43,7 @@ flowchart TD
 | `config.py` | walidacja konfiguracji i bramki sieciowej | wartości CLI | `AnalysisConfig` |
 | `fileio.py` | limitowany odczyt, kodowanie, język, skróty | ścieżka | `ScriptInput` |
 | `rules.py` | deterministyczne reguły podejrzanego kodu | tekst, język | `Finding[]` |
+| `engines.py`, `engine_rules.py` | uruchomienie lokalnych silników, reguły i mapowanie wyników | bajty, tekst, język, katalog wyjściowy | `Finding[]`, `EngineRun[]` |
 | `obfuscation.py` | sygnały i bezpieczne transformacje literałów | tekst | sygnały, kopia, transformacje |
 | `ioc.py` | URL, domeny, IPv4 i normalizacja | tekst | `IOC[]` |
 | `sanitization.py` | rozbrajanie URL, domen i IPv4/IPv6 przed wyjściem | tekst/struktura | bezpieczna prezentacja |
@@ -57,7 +58,15 @@ flowchart TD
 
 ## Kontrakty
 
-- `AnalysisResult.schema_version` ma obecnie wartość `1.2`.
+- `AnalysisResult.schema_version` ma wartość `1.3`. Pole `engine_runs`
+  zawiera nazwę silnika, reprezentację (`original` lub `deobfuscated`),
+  status (`ok`, `partial`, `unavailable`, `skipped`, `error`) i opis.
+- YARA dostaje bajty źródła, a parsery i lintery dostają tekst UTF-8.
+  Po transformacjach silniki otrzymują osobny przebieg na kopii. Dopasowania
+  pochodzące wyłącznie z tej kopii mają tag `deobfuscated`. Dopasowania
+  plikowe YARA używają linii 1 jako umownego odnośnika.
+- Defuskacja zachowuje sekwencje zapisu jednostek zastępczych UTF-16
+  w formie `\uNNNN`, dzięki czemu kopia ma poprawne kodowanie UTF-8.
 - Kolekcje w modelach są krotkami, co ogranicza przypadkową mutację.
 - Każda detekcja ma stabilny `rule_id`, ważność, linię i fragment dowodu.
 - IOC przechowuje pochodzenie: `original`, `deobfuscated` lub
@@ -85,4 +94,4 @@ aktualizacji ekstrakcji/defuskacji, testu integracyjnego i aktualizacji macierzy
 wymagań. Zewnętrzny silnik analizy powinien być osobnym adapterem zwracającym
 modele `Finding`; musi działać z `shell=False`, limitem czasu i ograniczonym
 wyjściem. Decyzja o braku obowiązkowych adapterów zewnętrznych jest opisana w
-`docs/decisions/0001-standard-library-core.md`.
+`docs/decisions/0005-local-static-engines.md`.

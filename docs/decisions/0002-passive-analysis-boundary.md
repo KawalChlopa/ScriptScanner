@@ -3,6 +3,8 @@
 - Status: zaakceptowany
 - Data: 2026-11-15
 
+Warunki użycia parserów statycznych precyzuje [ADR-0005](0005-local-static-engines.md).
+
 ## Kontekst
 
 Wejściem może być aktywnie szkodliwy kod. Nawet wygodne metody defuskacji oparte

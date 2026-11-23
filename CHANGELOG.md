@@ -2,6 +2,15 @@
 
 Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 
+## Niewydane
+
+- Dodano lokalne skanowanie przez YARA, Semgrep, ShellCheck, Esprimę i
+  PowerShell Parser API, także dla kopii po defuskacji.
+- Raporty pokazują status każdego uruchomionego silnika. JSON 1.3 dodaje
+  pole `engine_runs`.
+- Dodano opcjonalną instalację `.[static-analysis]` i zadanie CI
+  testujące rzeczywiste narzędzia.
+
 ## 0.1.0 - 2026-11-15
 
 ### Dodano

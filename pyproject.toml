@@ -15,6 +15,13 @@ authors = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+static-analysis = [
+  "esprima==4.0.1",
+  "semgrep>=1.186,<2",
+  "yara-python>=4.5,<5",
+]
+
 [project.scripts]
 infa-sled = "main:main"
 
@@ -25,6 +32,8 @@ py-modules = [
   "main",
   "config",
   "connections",
+  "engine_rules",
+  "engines",
   "history",
   "errors",
   "fileio",

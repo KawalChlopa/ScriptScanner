@@ -3,6 +3,8 @@
 - Status: zaakceptowany
 - Data: 2026-11-15
 
+Zakres dotyczący analizy statycznej rozszerzono w [ADR-0005](0005-local-static-engines.md).
+
 ## Kontekst
 
 Prototyp ma działać lokalnie, powtarzalnie i bez Internetu. Technologie YARA,

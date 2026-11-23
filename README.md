@@ -8,7 +8,8 @@ Projekt realizuje wymagania z dokumentu `Informatyka_sledcza.pdf` i obejmuje:
 
 - rozpoznawanie języka po rozszerzeniu, shebangu i cechach treści,
 - SHA-256, SHA-1 i MD5 niezmienionego pliku źródłowego,
-- reguły podejrzanych konstrukcji dla trzech języków,
+- sygnatury YARA, reguły strukturalne Semgrep, diagnostykę ShellCheck
+  oraz analizę AST w Esprimie i PowerShell Parser API,
 - detekcję Base64, sekwencji `\xNN` / `\uNNNN`, konkatenacji i długich linii,
 - pasywną defuskację obsługiwanych literałów,
 - ekstrakcję i normalizację URL, domen oraz adresów IPv4,
@@ -24,7 +25,8 @@ Projekt realizuje wymagania z dokumentu `Informatyka_sledcza.pdf` i obejmuje:
 ## Wymagania
 
 - Python 3.11 lub nowszy,
-- brak obowiązkowych zależności zewnętrznych,
+- pakiet `static-analysis` dla YARA, Semgrep i Esprimy oraz lokalne
+  `shellcheck` i `pwsh` (lub Windows PowerShell) dla pełnego zestawu,
 - sieć nie jest potrzebna do podstawowej analizy.
 
 ## Struktura kodu
@@ -46,7 +48,7 @@ src/
 Instalacja:
 
 ```powershell
-python -m pip install .
+python -m pip install '.[static-analysis]'
 infa-sled .\examples\benign.js
 ```
 
@@ -56,8 +58,8 @@ Uruchomienie bez instalacji:
 python .\src\main.py .\examples\benign.js
 ```
 
-Domyślnie program pokazuje wynik i rzeczywisty postęp analizy w terminalu, bez
-tworzenia plików. Zapis włącza się jawnie przez `--mode raport`. Każdy zapis
+Domyślnie program pokazuje wynik i postęp w terminalu. Trwały zapis raportów
+włącza się przez `--mode raport`. Każdy zapis
 trafia do osobnej wersji w katalogu `raport`:
 
 ```text
@@ -77,13 +79,41 @@ python src\main.py examples\benign.js --mode raport --type pdf
 python src\main.py examples\benign.js --mode raport --type json
 ```
 
-- bez `--mode` - terminal, bez zapisu plików,
+- bez `--mode` - terminal, bez trwałego zapisu raportów,
 - `--mode raport` - terminal oraz JSON i PDF,
 - `--mode raport --type pdf` - terminal oraz PDF,
 - `--mode raport --type json` - terminal oraz JSON,
 - `--type all` - jawny odpowiednik domyślnego zestawu JSON i PDF w trybie raportu.
 
 Opcja `--type` jest poprawna wyłącznie razem z `--mode raport`.
+
+## Silniki analizy statycznej
+
+Zainstaluj pakiet w środowisku wirtualnym, z którego uruchamiasz analizator.
+ShellCheck i PowerShell instalujesz osobno, jeśli brakuje ich w `PATH`.
+Na Windows ShellCheck jest dostępny przez `winget install --id koalaman.shellcheck`,
+a na Ubuntu przez `sudo apt-get install shellcheck`. PowerShell Parser API jest
+częścią PowerShell i działa przez `pwsh` lub `powershell.exe`.
+
+| Silnik | Język wejścia | Wynik |
+|---|---|---|
+| YARA | PowerShell, JavaScript, Bash | Dopasowania sygnatur bajtowych na poziomie pliku |
+| Semgrep | JavaScript, Bash | Dopasowania lokalnych reguł składniowych |
+| ShellCheck | Bash | Diagnostyka składni i ryzykownych praktyk |
+| Esprima | JavaScript | Detekcje wywołań dynamicznych w AST |
+| PowerShell Parser API | PowerShell | Detekcje dynamicznych poleceń i tworzenia `ScriptBlock` w AST |
+
+Silniki uruchamiają się automatycznie dla właściwego języka. Analizują
+oryginał i kopię po defuskacji, gdy powstała. Instalacja podstawowa
+(`python -m pip install .`) nadal pozwala używać wbudowanych reguł.
+Sekcja **Silniki analizy statycznej** podaje stan każdego przebiegu, również
+przy braku narzędzia, błędzie lub częściowej analizie. JSON 1.3 udostępnia
+te informacje jako `engine_runs`.
+
+Silniki korzystają z lokalnych reguł bez pobierania konfiguracji w trakcie
+skanu. Pliki robocze pod `--output` są usuwane po przebiegu. Esprima może
+zgłosić częściową analizę przy nowszej składni JavaScript, a parser
+PowerShell pomija tekst z możliwymi dyrektywami odczytu zasobów.
 
 ## Korelacja z logiem
 
@@ -222,9 +252,8 @@ granice wejścia mają przypadki błędne. Szczegółowa mapa znajduje się w
 
 - To narzędzie wspomagające analizę, nie antywirus i nie sandbox dynamiczny.
 - Brak detekcji nie oznacza, że skrypt jest bezpieczny.
-- Wbudowana analiza używa deterministycznych reguł Regex i lekkiej analizy
-  struktury tekstu. Adaptery YARA, Semgrep, ShellCheck, Esprima i PowerShell
-  Parser API są zaplanowanym rozszerzeniem, nie ukrytą zależnością.
+- Analiza obejmuje deterministyczne reguły tekstowe oraz ograniczony zestaw
+  reguł i diagnostyk poszczególnych silników.
 - Defuskacja celowo obsługuje ograniczone, jednoznaczne transformacje i nigdy
   nie interpretuje uzyskanego kodu.
 - Odczyt systemu wymaga `--system-history`. Nie odtwarza usuniętych logów,

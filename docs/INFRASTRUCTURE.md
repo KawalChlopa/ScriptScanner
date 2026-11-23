@@ -9,7 +9,7 @@ aktualizacji razem z `docs/infrastructure-inventory.json`.
 | Warstwa | Stan | Szczegóły |
 |---|---|---|
 | Runtime | wymagany | CPython 3.11+ na Windows/Linux/macOS |
-| Biblioteki runtime | brak zewnętrznych | wyłącznie biblioteka standardowa |
+| Biblioteki runtime | rdzeń i rozszerzenia | standardowa biblioteka oraz opcjonalny pakiet `static-analysis` |
 | CLI | lokalny proces | `infa-sled` lub `python src/main.py` |
 | Baza danych | brak | wynik jest wersjonowanymi plikami |
 | Kontener | brak | nie jest potrzebny do prototypu |
@@ -25,10 +25,25 @@ Projekt nie używa zagnieżdżonego katalogu pakietu.
 
 ### Produkcyjne
 
-Brak pakietów PyPI wymaganych w runtime. Generator PDF jest małym,
+Rdzeń działa z biblioteką standardową. Generator PDF jest małym,
 deterministycznym generatorem PDF 1.4 używającym wbudowanej Helvetica; polskie
 znaki są transliterowane tylko w PDF. JSON i raport terminalowy zachowują pełny
 UTF-8.
+
+| Silnik | Zależność i uruchomienie |
+|---|---|
+| YARA | `yara-python>=4.5,<5`, osobny proces CPython na danych binarnych |
+| Semgrep | `semgrep>=1.186,<2`, CLI z bieżącego środowiska lub z `PATH`; zestaw reguł lokalnych |
+| Esprima | `esprima==4.0.1`, osobny proces CPython, składnia do ECMAScript 2017 |
+| ShellCheck | lokalne `shellcheck` w `PATH`; testowane z 0.11.0 |
+| PowerShell Parser API | `pwsh` lub `powershell.exe` w `PATH`; zaufany program wywołuje `Parser.ParseInput` |
+
+Pierwsze trzy pozycje instaluje dodatkowy zestaw `.[static-analysis]`. Dla
+każdego przebiegu limit wynosi 5 MB wejścia, 15 s, 2 MB stdout, 64 KiB stderr
+i 500 odczytanych detekcji. Przy buforowaniu w plikach chwilowe przekroczenie
+limitu wyjścia między kontrolami jest możliwe. Semgrep ma ponadto jeden proces
+roboczy, 5 s na regułę oraz limit pamięci 512 MB. Prywatne katalogi robocze
+pod katalogiem wynikowym są usuwane po zakończeniu.
 
 Opcjonalny `--system-history` używa narzędzi lokalnych: Windows `wevtutil qe`
 (Sysmon 1/3/22, Security 4688/5156/5157), Linux `journalctl` i odczyt bieżącego
@@ -80,7 +95,7 @@ pliki `raport.json`, `raport.pdf` i ewentualną kopię po defuskacji. Aplikacja 
 automatycznie. Operator odpowiada za retencję i uprawnienia katalogu. Zapis
 raportu jest atomowy w obrębie systemu plików (`tempfile` + `os.replace`).
 
-CLI domyślnie pokazuje postęp i wynik w terminalu bez zapisu. `--mode raport`
+CLI domyślnie pokazuje postęp i wynik w terminalu bez trwałego zapisu raportu. `--mode raport`
 dodaje wersjonowane pliki, a `--type json|pdf|all` wybiera ich format; domyślny
 typ `all` oznacza JSON i PDF.
 
@@ -88,7 +103,8 @@ Wszystkie raporty terminalowe i plikowe rozbrajają URL, domeny oraz adresy IP.
 Parser logów rozpoznaje zapis `hxxp(s)`, `[.]` i `[:]` bez zapisywania ponownie
 uzbrojonych wartości. Dla każdego IOC raport zapisuje rodzaj dowodu, status,
 liczbę sprawdzonych źródeł i dopasowań. `execution_check` opisuje dowody
-wywołania, a `history_sources` dostępność i pokrycie danych. Schemat wyniku: 1.2.
+wywołania, `history_sources` dostępność i pokrycie danych, a `engine_runs`
+stan poszczególnych silników. Schemat wyniku ma wersję 1.3.
 
 ## Kody wyjścia i obserwowalność
 
@@ -101,8 +117,9 @@ wywołania, a `history_sources` dostępność i pokrycie danych. Schemat wyniku:
 
 Workflow `.github/workflows/ci.yml` instaluje projekt i uruchamia pełny
 `unittest` oraz `compileall` na systemach Windows i Ubuntu dla wspieranych
-wersji Pythona. Testy nie otwierają połączeń, nie używają sekretów ani próbek
-wykonywalnych.
+wersji Pythona. Dodatkowe zadanie na Ubuntu instaluje silniki i sprawdza
+pozytywne i negatywne przykłady jako dane. Silniki nie potrzebują dostępu do
+Internetu podczas testów. Instalacja narzędzi używa repozytoriów pakietów.
 
 ## Higiena repozytorium
 
@@ -112,12 +129,3 @@ Logi są ignorowane globalnie, ale `examples/**/*.log` są celowo wersjonowane,
 ponieważ stanowią dane testowe. Źródłowy `Informatyka_sledcza.pdf` pozostaje
 lokalny, ponieważ zawiera dane osobowe autorów i nie jest potrzebny do działania
 pakietu.
-
-## Elementy świadomie nieobecne
-
-YARA, Semgrep, ShellCheck, Esprima i PowerShell Parser API widnieją w dokumencie
-projektowym jako planowane technologie. Bieżący prototyp nie udaje ich
-obecności: nie wywołuje tych silników i nie ma ukrytych zależności.
-Jedynymi narzędziami systemowymi są jawne adaptery odczytu historii.
-Dodanie adaptera wymaga ADR, kontroli wersji narzędzia, limitu czasu,
-testów awarii i aktualizacji niniejszego inwentarza.

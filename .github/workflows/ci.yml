@@ -26,3 +26,21 @@ jobs:
         run: python -m unittest discover -s tests -t . -v
       - name: Compile all modules
         run: python -m compileall -q src tests
+
+  static-engines:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install local engines
+        run: |
+          python -m pip install '.[static-analysis]'
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          command -v pwsh
+      - name: Test real engines with inert fixtures
+        env:
+          TEST_STATIC_ENGINES: "1"
+        run: python -m unittest tests.test_engines -v

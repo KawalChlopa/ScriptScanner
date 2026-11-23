@@ -2,9 +2,10 @@
 
 ## Najważniejsza właściwość
 
-Analizowany kod nigdy nie jest wykonywany. Program nie używa `eval`, `exec`,
-`subprocess` ani powłoki dla treści wejściowej. Defuskacja operuje na kopii
-łańcucha znaków, a wynik jest wyłącznie raportowany.
+Analizowany kod jest przekazywany jako dane. Silniki statyczne otrzymują bajty
+na standardowym wejściu albo kopię w katalogu roboczym. Argumenty procesu
+zawierają stały program adaptera, reguły lub nazwy kontrolowane przez aplikację.
+Defuskacja operuje na kopii łańcucha znaków.
 
 ## Granice zaufania
 
@@ -18,7 +19,7 @@ a nazwy katalogów są sanitowane.
 
 | Zagrożenie | Kontrola | Ryzyko resztkowe |
 |---|---|---|
-| przypadkowe wykonanie próbki | brak interpreterów/powłoki i pasywne API | błąd przyszłego adaptera |
+| przypadkowe wykonanie próbki | stałe programy adapterów, pasywne API i `shell=False` | zaufane lokalne zależności |
 | wyczerpanie pamięci | limit skryptu, logu, linii i odpowiedzi API | Regex może zużyć CPU na złożonym wejściu |
 | nadpisanie źródła | osobny, wersjonowany katalog wyjścia | błędnie wskazany katalog może mieć słabe ACL |
 | terminal escape injection | usuwanie znaków sterujących przez `terminal_text` | raport nadal może zawierać niepokojącą treść próbki |
@@ -31,6 +32,31 @@ a nazwy katalogów są sanitowane.
 | wstrzyknięcie polecenia przez log | dane nigdy nie trafiają do poleceń; stałe adaptery `wevtutil qe`/`journalctl`, `shell=False` | lokalny system i narzędzia muszą być zaufane |
 | XML entity expansion | odrzucanie DTD/ENTITY i limit pliku | parser nie uwierzytelnia źródła logu |
 | przypadkowe kliknięcie IOC | rozbrajanie URL, domen oraz IPv4/IPv6 we wszystkich wyjściach | użytkownik może ręcznie odtworzyć adres |
+
+## Silniki statyczne
+
+- YARA kompiluje wyłącznie reguły projektu, z wyłączonymi dyrektywami
+  `include`. Esprima odczytuje drzewo składni JavaScript.
+- Semgrep dostaje pojedynczą kopię analizowanego pliku i lokalne reguły
+  z projektu. Sprawdzanie wersji, metryki, telemetria oraz globalna
+  konfiguracja Git są wyłączone. Katalog roboczy jest korzeniem projektu
+  Semgrep. CLI skanuje bez logowania, rejestru reguł i automatycznych poprawek.
+- ShellCheck analizuje stdin w trybie Bash, z wyłączoną konfiguracją z hosta.
+  Adapter neutralizuje jawne dyrektywy ShellCheck z próbki i wstawia własną
+  dyrektywę `source=/dev/null`, aby użyć pustej treści dla odwołań `source`.
+  Opcja odczytu zewnętrznych źródeł `-x` jest wyłączona.
+- PowerShell uruchamia zaufany program bez profilu i bez interakcji. Program
+  używa `Parser.ParseInput` i odczytuje węzły AST. Adapter konserwatywnie
+  pomija tekst zawierający `using`, `configuration` lub możliwe `#requires`,
+  ponieważ parser może rozwiązywać zależności podczas parsowania. Dotyczy to
+  również wystąpień w komentarzach i literałach.
+
+Procesy mają osobne katalogi robocze, ograniczone środowisko bez kluczy
+reputacji, limit czasu, wejścia i buforowanego wyjścia. Surowe błędy
+narzędzi pozostają poza raportem. Status niepełnej analizy jest widoczny
+w terminalu, JSON i PDF. Limity nie stanowią izolacji systemowej. Ścieżki
+instalacji narzędzi, bezwzględne katalogi w `PATH` oraz katalog wynikowy
+muszą należeć do zaufanej konfiguracji operatora.
 
 ## Logi połączeń
 

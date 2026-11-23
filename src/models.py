@@ -38,6 +38,14 @@ class Finding:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineRun:
+    engine: str
+    representation: str
+    status: str
+    detail: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class ObfuscationSignal:
     kind: str
     confidence: str
@@ -181,6 +189,7 @@ class AnalysisResult:
     deobfuscated_text: str | None
     execution_check: ExecutionCheck = ExecutionCheck()
     history_sources: tuple[HistorySource, ...] = ()
+    engine_runs: tuple[EngineRun, ...] = ()
 
 
 def to_primitive(value: Any) -> Any:

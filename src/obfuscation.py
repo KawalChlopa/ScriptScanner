@@ -101,7 +101,10 @@ def decode_escaped_literals(text: str) -> tuple[str, tuple[Transformation, ...]]
     transformations: list[Transformation] = []
 
     def replace(match: re.Match[str]) -> str:
-        transformed = chr(int(match.group(1), 16))
+        code_point = int(match.group(1), 16)
+        if 0xD800 <= code_point <= 0xDFFF:
+            return match.group(0)  # Keep UTF-16 surrogate code units in escaped form.
+        transformed = chr(code_point)
         transformations.append(
             Transformation(
                 "escaped-character",

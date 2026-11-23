@@ -40,6 +40,13 @@ class RulesTests(unittest.TestCase):
 
 
 class ObfuscationTests(unittest.TestCase):
+    def test_decode_escaped_literals_keeps_utf16_surrogate_code_units_escaped(self) -> None:
+        source = r"\uD800 \uD83D\uDE00 \u0061"
+        decoded, transformations = decode_escaped_literals(source)
+        self.assertEqual(decoded, r"\uD800 \uD83D\uDE00 a")
+        self.assertEqual([item.transformed for item in transformations], ["a"])
+        self.assertEqual(decoded.encode("utf-8").decode("utf-8"), decoded)
+
     def test_printable_ratio_handles_empty_and_text(self) -> None:
         self.assertEqual(printable_ratio(""), 0.0)
         self.assertEqual(printable_ratio("abc\n"), 1.0)

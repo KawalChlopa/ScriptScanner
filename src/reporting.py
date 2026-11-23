@@ -132,6 +132,25 @@ def terminal_text(value: str, limit: int = 500) -> str:
     return " ".join(printable.split())[:limit]
 
 
+def engine_report_lines(result: AnalysisResult) -> list[str]:
+    """Prezentuje pokrycie silnikow niezaleznie od liczby detekcji."""
+    labels = {
+        "ok": "ZAKONCZONO",
+        "partial": "CZESCIOWO",
+        "unavailable": "NIEDOSTEPNY",
+        "skipped": "POMINIETO",
+        "error": "BLAD",
+    }
+    return [
+        "SILNIKI ANALIZY STATYCZNEJ",
+        *(
+            f"  {run.engine} ({run.representation}): {labels[run.status]}"
+            + (f" - {run.detail}" if run.detail else "")
+            for run in result.engine_runs
+        ),
+    ]
+
+
 def render_terminal(result: AnalysisResult) -> str:
     """Buduje szczegolowy, czytelny raport przeznaczony do terminala."""
 
@@ -158,6 +177,8 @@ def render_terminal(result: AnalysisResult) -> str:
     else:
         lines.append("  Brak")
 
+    if result.engine_runs:
+        lines.extend(("", *map(terminal_text, engine_report_lines(result))))
     lines.extend(("", f"OBFUSKACJA ({len(result.obfuscation_signals)})"))
     if result.obfuscation_signals:
         for signal in result.obfuscation_signals:
@@ -236,6 +257,8 @@ def pdf_lines(result: AnalysisResult) -> list[str]:
             f"[{finding.severity.upper()}] {finding.rule_id}, linia {finding.line}: "
             f"{finding.title} - {finding.excerpt}"
         )
+    if result.engine_runs:
+        lines.extend(("", *engine_report_lines(result)))
     lines.extend(("", f"OBFUSKACJA ({len(result.obfuscation_signals)})"))
     for signal in result.obfuscation_signals:
         lines.append(f"[{signal.confidence}] {signal.kind}, linia {signal.line}: {signal.detail}")

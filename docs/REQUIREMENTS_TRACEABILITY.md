@@ -10,7 +10,7 @@ w tym repozytorium.
 | F-01 | odczyt PowerShell/JavaScript/Bash | `fileio.read_script`, `detect_language` | `FileIoTests` | pełne |
 | F-02 | rozpoznanie języka z cech pliku i treści | rozszerzenie, shebang, heurystyki | `test_detect_language_*` | pełne dla 3 języków |
 | F-03 | SHA-256, SHA-1, MD5 | `compute_hashes` | `test_compute_hashes_*` | pełne |
-| F-04 | podejrzane instrukcje i wzorce | `rules.py`, Regex, reguły językowe | `RulesTests`, pipeline | częściowe: bez pełnego AST/YARA |
+| F-04 | podejrzane instrukcje i wzorce | reguły wbudowane, YARA, Semgrep, ShellCheck oraz AST z Esprimy i PowerShell Parser API | `RulesTests`, `EngineAdapterTests`, `InstalledEngineTests` | pełne dla dostępnych silników i reguł |
 | F-05 | rozpoznanie obfuskacji | Base64, escapes, konkatenacja, długa linia | `ObfuscationTests` | pełne dla zadeklarowanego zakresu |
 | F-06 | pasywna defuskacja | Base64, `\x`, `\u`, proste literały | `test_deobfuscate_*` | pełne dla zadeklarowanego zakresu |
 | F-07 | IP, domeny i URL z obu reprezentacji | `ioc.py`, `pipeline.py` | `IocTests`, pipeline | pełne |
@@ -32,19 +32,16 @@ w tym repozytorium.
 
 | ID | Wymaganie | Dowód | Status |
 |---|---|---|---|
-| NF-01 | brak wykonania kodu | brak eval i uruchamiania próbki; subprocess tylko do stałych narzędzi odczytu OS, `AGENTS.md` | pełne |
+| NF-01 | brak wykonania kodu | stałe adaptery narzędzi odczytu i silników pasywnych, z wejściem jako dane, `AGENTS.md` | pełne |
 | NF-02 | integralność źródła | odczyt binarny, skróty, osobny katalog raportów, test integralności | pełne |
 | NF-03 | modularność | moduły o rozdzielonych odpowiedzialnościach i typowane modele | pełne |
 | NF-04 | rozszerzalność | stabilne reguły i kontrakty modeli | pełne dla reguł |
 | NF-05 | powtarzalność | deterministyczne lokalne etapy; czas i API jawnie zmienne | pełne lokalnie |
-| NF-06 | odporność i limity | rozmiar, linie, odpowiedź API, timeout sieci | pełne; brak limitu CPU Regex |
-| NF-07 | praca lokalna | brak zależności runtime i usług | pełne |
+| NF-06 | odporność i limity | rozmiar, linie, odpowiedź API, timeout sieci i silników, limity wyjścia | pełne dla adapterów; brak limitu CPU Regex |
+| NF-07 | praca lokalna | lokalne zależności, brak usług wymaganych podczas analizy | pełne |
 
 ## Planowane rozszerzenia, nie kryteria ukończenia prototypu
 
-1. Adapter YARA z osobnym pakietem reguł.
-2. Adaptery Semgrep i ShellCheck z `shell=False` i timeoutem.
-3. Pełne parsery AST dla JavaScript i PowerShell.
-4. Dalsze formaty historii, rotowane audit.log, bezpośredni import binarnego EVTX,
+1. Dalsze formaty historii, rotowane audit.log, bezpośredni import binarnego EVTX,
    rozpoznawanie kolejnych interpreterów i pośrednich łańcuchów uruchomienia.
-5. Limit czasu/CPU dla kosztownych reguł w osobnym procesie izolowanym.
+2. Limit czasu/CPU dla kosztownych reguł Regex w osobnym procesie izolowanym.
