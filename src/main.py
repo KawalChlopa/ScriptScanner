@@ -19,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Buduje parser CLI w jednym miejscu, aby interfejs byl testowalny."""
 
     parser = argparse.ArgumentParser(
-        prog="infa-sled",
+        prog="scriptscanner",
         description="Pasywna analiza skryptow PowerShell, JavaScript i Bash",
     )
     parser.add_argument("input", type=Path, help="plik skryptu do analizy")

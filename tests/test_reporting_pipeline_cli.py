@@ -244,6 +244,7 @@ class PipelineTests(unittest.TestCase):
 class CliTests(unittest.TestCase):
     def test_build_parser_and_config_from_args(self) -> None:
         parser = build_parser()
+        self.assertIn("usage: scriptscanner ", parser.format_usage())
         args = parser.parse_args(
             [
                 "sample.ps1",

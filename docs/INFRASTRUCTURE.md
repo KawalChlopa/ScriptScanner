@@ -10,7 +10,7 @@ aktualizacji razem z `docs/infrastructure-inventory.json`.
 |---|---|---|
 | Runtime | wymagany | CPython 3.11+ na Windows/Linux/macOS |
 | Biblioteki runtime | rdzeń i rozszerzenia | standardowa biblioteka oraz opcjonalny pakiet `static-analysis` |
-| CLI | lokalny proces | `infa-sled` lub `python src/main.py` |
+| CLI | lokalny proces | `scriptscanner` lub `python src/main.py` |
 | Baza danych | brak | wynik jest wersjonowanymi plikami |
 | Kontener | brak | nie jest potrzebny do prototypu |
 | Kolejka/cache | brak | analiza synchroniczna, jeden plik na wywołanie |
@@ -18,7 +18,8 @@ aktualizacji razem z `docs/infrastructure-inventory.json`.
 | CI | GitHub Actions | macierz Python 3.11/3.12, Ubuntu/Windows |
 
 Moduły aplikacji leżą bezpośrednio w `src/`. `main.py` jest głównym punktem
-uruchomienia analizatora, a wpis konsolowy `infa-sled` wskazuje na `main:main`.
+uruchomienia analizatora. Polecenie `scriptscanner` i zgodny wstecznie alias
+`infa-sled` wskazują na `main:main`.
 Projekt nie używa zagnieżdżonego katalogu pakietu.
 
 ## Zależności

@@ -4,6 +4,8 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 
 ## Niewydane
 
+- Polecenie, pomoc i komunikaty CLI używają nazwy `scriptscanner`.
+
 - Dodano instalator Windows i próbki do sprawdzenia pięciu silników z CLI.
 - Dodano lokalne skanowanie przez YARA, Semgrep, ShellCheck, Esprimę i
   PowerShell Parser API, także dla kopii po defuskacji.

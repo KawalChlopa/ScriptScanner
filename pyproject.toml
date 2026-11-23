@@ -23,6 +23,7 @@ static-analysis = [
 ]
 
 [project.scripts]
+scriptscanner = "main:main"
 infa-sled = "main:main"
 
 [tool.setuptools]

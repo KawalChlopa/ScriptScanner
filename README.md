@@ -55,7 +55,7 @@ Instalacja:
 
 ```powershell
 python -m pip install '.[static-analysis]'
-infa-sled .\examples\benign.js
+scriptscanner .\examples\benign.js
 ```
 
 Uruchomienie bez instalacji:
@@ -154,7 +154,7 @@ Linux Audit. Pliki obsługują UTF-8 oraz UTF-16 z BOM. Analizator nie łączy s
 z adresem znalezionym w logu.
 
 ```powershell
-infa-sled .\sample.ps1 --connection-log .\dns.log --connection-log .\proxy.csv
+scriptscanner .\sample.ps1 --connection-log .\dns.log --connection-log .\proxy.csv
 ```
 
 Domyślne limity to 5 MB dla skryptu, 10 MB i 100 000 wierszy dla jednego logu.
@@ -219,7 +219,7 @@ Klucz API jest pobierany ze zmiennej środowiskowej, a nie z argumentu procesu.
 
 ```powershell
 $env:INFA_SLED_API_KEY = "..."
-infa-sled .\sample.js `
+scriptscanner .\sample.js `
   --enable-network `
   --ntp-server time.example.org `
   --reputation virustotal
@@ -249,7 +249,7 @@ ujawnić dostawcy dane wrażliwe; szczegóły opisuje `docs/SECURITY.md`.
 --timeout SEKUNDY
 ```
 
-Pełna pomoc: `infa-sled --help`.
+Pełna pomoc jest dostępna przez `scriptscanner --help`.
 
 ## Demonstracja obfuskacji i historii połączeń
 

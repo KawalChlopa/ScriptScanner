@@ -2,7 +2,7 @@
 
 ## Kontekst
 
-Infa-Sled jest lokalnym analizatorem plików. Granicą zaufania jest proces
+ScriptScanner jest lokalnym analizatorem plików. Granicą zaufania jest proces
 Pythona: plik skryptu i jawnie podane logi są niezaufanymi danymi, a katalog
 wynikowy jest jedynym miejscem zapisu. Rdzeń nie wymaga usług ani bazy danych.
 

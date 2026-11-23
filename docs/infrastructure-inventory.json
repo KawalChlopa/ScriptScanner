@@ -7,6 +7,7 @@
     "optional_static_analysis_extra": ["esprima==4.0.1", "semgrep>=1.186,<2", "yara-python>=4.5,<5"]
   },
   "entrypoints": [
+    "scriptscanner",
     "infa-sled",
     "python src/main.py"
   ],
