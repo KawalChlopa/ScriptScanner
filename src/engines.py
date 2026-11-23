@@ -12,6 +12,8 @@ import sys
 import sysconfig
 import tempfile
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 from engine_rules import (
@@ -50,6 +52,25 @@ PACKAGE_CHECK = (
 
 class EngineError(Exception):
     """Kontrolowany blad narzedzia lub jego protokolu."""
+
+
+@contextmanager
+def engine_temp_directory(directory: Path, prefix: str) -> Iterator[Path]:
+    """Ponawia sprzatanie przy krotkotrwalej blokadzie pliku w Windows."""
+    temporary = tempfile.TemporaryDirectory(prefix=prefix, dir=directory)
+    try:
+        yield Path(temporary.name)
+    finally:
+        deadline = time.monotonic() + 2.0
+        while True:
+            try:
+                temporary.cleanup()
+                break
+            except PermissionError as error:
+                remaining = deadline - time.monotonic()
+                if getattr(error, "winerror", None) not in {32, 33} or remaining <= 0:
+                    raise
+                time.sleep(min(0.05, remaining))
 
 
 def trusted_executable(name: str, *, python_scripts: bool = False) -> str | None:
@@ -121,10 +142,10 @@ def run_engine(
         "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     })
     with (
-        tempfile.TemporaryDirectory(prefix="stdio-", dir=directory) as io_directory,
-        (Path(io_directory) / "stdin").open("x+b") as source,
-        (Path(io_directory) / "stdout").open("x+b") as output,
-        (Path(io_directory) / "stderr").open("x+b") as errors,
+        engine_temp_directory(directory, "stdio-") as io_directory,
+        (io_directory / "stdin").open("x+b") as source,
+        (io_directory / "stdout").open("x+b") as output,
+        (io_directory / "stderr").open("x+b") as errors,
     ):
         source.write(input_data)
         source.seek(0)
@@ -239,8 +260,7 @@ def scan_engines(
                         cleaned = "# " + cleaned[2:]
                     input_data = (SHELLCHECK_HEADER + cleaned).encode("utf-8")
                 output_dir.mkdir(parents=True, exist_ok=True)
-                with tempfile.TemporaryDirectory(prefix=".scan-", dir=output_dir.resolve()) as temp:
-                    directory = Path(temp)
+                with engine_temp_directory(output_dir.resolve(), ".scan-") as directory:
                     if engine == "semgrep":
                         target = SEMGREP_TARGETS[language]
                         (directory / target).write_bytes(input_data)

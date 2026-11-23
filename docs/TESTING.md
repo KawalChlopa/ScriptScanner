@@ -76,6 +76,8 @@ PowerShell oraz próbę wyciszenia diagnostyki ShellCheck z treści próbki.
 Test uruchamiania adaptera sprawdza usuwanie plików wejścia i wyjścia
 na Windows i Linux po zakończeniu procesu, przekroczeniu czasu i
 przekroczeniu limitu wyjścia.
+Osobny przypadek symuluje krótkotrwałą blokadę pliku na Windows i sprawdza,
+czy ponowienie sprzątania zachowuje pierwotny błąd limitu.
 
 Na Windows można sprawdzić `install.cmd` oraz wykonać z nowego CMD polecenie
 `py src/main.py examples/engine_check.sh`. Wyniki `YARA-SH-001`,

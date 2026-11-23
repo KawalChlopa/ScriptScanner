@@ -15,6 +15,7 @@ from engines import (
     PACKAGE_UNAVAILABLE,
     EngineError,
     engine_command,
+    engine_temp_directory,
     parse_engine_output,
     run_engine,
     scan_engines,
@@ -76,6 +77,30 @@ class EngineAdapterTests(unittest.TestCase):
                         program = f"import sys; sys.{stream}.write('x'*2000)"
                         run_engine([*command, program], directory, b"")
                     self.assertEqual(list(directory.iterdir()), [])
+
+    def test_temp_directory_retries_windows_sharing_violation(self) -> None:
+        original_cleanup = tempfile.TemporaryDirectory.cleanup
+        sharing_error = PermissionError("locked")
+        sharing_error.winerror = 32
+        outcomes = iter((sharing_error, None))
+
+        def cleanup(temporary: tempfile.TemporaryDirectory) -> None:
+            error = next(outcomes)
+            if error is not None:
+                raise error
+            original_cleanup(temporary)
+
+        with tempfile.TemporaryDirectory() as parent:
+            with patch.object(tempfile.TemporaryDirectory, "cleanup", cleanup):
+                with self.assertRaisesRegex(EngineError, "limit"):
+                    with engine_temp_directory(Path(parent), "blocked-") as directory:
+                        (directory / "stderr").write_bytes(b"sample")
+                        raise EngineError("limit")
+            self.assertEqual(list(Path(parent).iterdir()), [])
+            with patch.object(tempfile.TemporaryDirectory, "cleanup", side_effect=PermissionError):
+                with self.assertRaises(PermissionError):
+                    with engine_temp_directory(Path(parent), "denied-"):
+                        pass
 
     def test_output_mapping_distinguishes_empty_partial_and_malformed(self) -> None:
         diagnostic = {"code": 2086, "line": 3, "level": "warning", "message": "Quote the expansion"}
