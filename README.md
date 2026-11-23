@@ -1,4 +1,4 @@
-# Infa-Sled
+# ScriptScanner
 
 Lokalny prototyp do pasywnej analizy potencjalnie szkodliwych skryptów
 PowerShell, JavaScript i Bash. Program traktuje wejście wyłącznie jako dane:
