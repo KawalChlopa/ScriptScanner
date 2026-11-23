@@ -30,6 +30,7 @@ funkcji sieciowych. NTP i HTTPS są zastępowane kontrolowanymi atrapami.
 | `timing.py` | format UTC, system, NTP, fallback | `TimingTests` |
 | `reputation.py` | żądania, limit JSON, mapowanie, błędy | `ReputationTests` |
 | `reporting.py` | nazwy `raport.json`/`raport.pdf`, wspólna prezentacja dowodów, terminal, JSON/PDF, atomowy zapis | `ReportingTests`, `EvidenceTests` |
+| `reporting.py` | statusy narzędzi dla wejścia i opcjonalnej kopii po defuskacji | `EngineAdapterTests` |
 | `pipeline.py` | scalanie, analiza, callback postępu, zapis, ostrzeżenia | `PipelineTests` |
 | `main.py` | domyślny terminal, `--mode raport`, typy, konfiguracja i kody wyjścia | `CliTests` |
 

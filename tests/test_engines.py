@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -154,8 +155,17 @@ class EngineAdapterTests(unittest.TestCase):
             finding = next(item for item in result.findings if item.rule_id == decoded.rule_id)
             self.assertIn("deobfuscated", finding.tags)
             self.assertEqual(json.loads(render_json(result))["engine_runs"][0]["status"], "unavailable")
-            self.assertIn("SILNIKI ANALIZY STATYCZNEJ", render_terminal(result))
-            self.assertIn(b"SILNIKI ANALIZY STATYCZNEJ", render_pdf(result))
+            terminal = render_terminal(result)
+            self.assertIn("STATUS NARZEDZI ANALIZY", terminal)
+            self.assertIn("yara: NIEDOSTEPNY - Brak pakietu", terminal)
+            self.assertIn("Kopia po defuskacji\nyara: ZAKONCZONO", terminal)
+            self.assertNotIn("(original)", terminal)
+            pdf = render_pdf(result)
+            self.assertIn(b"STATUS NARZEDZI ANALIZY", pdf)
+            self.assertIn(b"Kopia po defuskacji", pdf)
+            self.assertIn(b"yara: ZAKONCZONO", pdf)
+            original_only = replace(result, engine_runs=(original_run,))
+            self.assertNotIn("Kopia po defuskacji", render_terminal(original_only))
 
 
 @unittest.skipUnless(os.environ.get("TEST_STATIC_ENGINES") == "1", "requires installed engines")

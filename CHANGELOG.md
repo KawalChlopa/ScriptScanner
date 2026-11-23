@@ -4,6 +4,8 @@ Wszystkie istotne zmiany projektu są dokumentowane w tym pliku.
 
 ## Niewydane
 
+- Uproszczono prezentację statusów narzędzi w terminalu i PDF.
+
 - Polecenie, pomoc i komunikaty CLI używają nazwy `scriptscanner`.
 
 - Dodano instalator Windows i próbki do sprawdzenia pięciu silników z CLI.

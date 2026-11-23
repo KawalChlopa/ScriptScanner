@@ -112,7 +112,7 @@ częścią PowerShell i działa przez `pwsh` lub `powershell.exe`.
 Silniki uruchamiają się automatycznie dla właściwego języka. Analizują
 oryginał i kopię po defuskacji, gdy powstała. Instalacja podstawowa
 (`python -m pip install .`) nadal pozwala używać wbudowanych reguł.
-Sekcja **Silniki analizy statycznej** podaje stan każdego przebiegu, również
+Sekcja **Status narzędzi analizy** podaje stan każdego przebiegu, również
 przy braku narzędzia, błędzie lub częściowej analizie. JSON 1.3 udostępnia
 te informacje jako `engine_runs`.
 
@@ -131,8 +131,9 @@ python src/main.py examples/engine_check.sh
 python src/main.py examples/engine_check.ps1
 ```
 
-W sekcji **Silniki analizy statycznej** każdy silnik przypisany do pliku
-powinien mieć stan `ZAKONCZONO` dla `original`. W sekcji **Detekcje**
+W sekcji **Status narzędzi analizy** każdy silnik przypisany do pliku
+powinien mieć stan `ZAKONCZONO`. Gdy powstanie kopia po defuskacji,
+jej statusy pojawiają się pod podpisem **Kopia po defuskacji**. W sekcji **Detekcje**
 sprawdź poniższe identyfikatory. Próbki zawierają funkcje bez wywołań
 oraz komentarze dobrane do sygnatur YARA.
 

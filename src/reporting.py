@@ -141,14 +141,19 @@ def engine_report_lines(result: AnalysisResult) -> list[str]:
         "skipped": "POMINIETO",
         "error": "BLAD",
     }
-    return [
-        "SILNIKI ANALIZY STATYCZNEJ",
-        *(
-            f"  {run.engine} ({run.representation}): {labels[run.status]}"
-            + (f" - {run.detail}" if run.detail else "")
-            for run in result.engine_runs
-        ),
-    ]
+    lines = ["STATUS NARZEDZI ANALIZY"]
+    decoded = []
+    for run in result.engine_runs:
+        line = f"  {run.engine}: {labels[run.status]}"
+        if run.detail:
+            line += f" - {run.detail}"
+        if run.representation == "deobfuscated":
+            decoded.append(line)
+        else:
+            lines.append(line)
+    if decoded:
+        lines.extend(("", "Kopia po defuskacji", *decoded))
+    return lines
 
 
 def render_terminal(result: AnalysisResult) -> str:
