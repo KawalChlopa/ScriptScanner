@@ -121,9 +121,10 @@ def run_engine(
         "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     })
     with (
-        tempfile.TemporaryFile(dir=directory) as source,
-        tempfile.TemporaryFile(dir=directory) as output,
-        tempfile.TemporaryFile(dir=directory) as errors,
+        tempfile.TemporaryDirectory(prefix="stdio-", dir=directory) as io_directory,
+        (Path(io_directory) / "stdin").open("x+b") as source,
+        (Path(io_directory) / "stdout").open("x+b") as output,
+        (Path(io_directory) / "stderr").open("x+b") as errors,
     ):
         source.write(input_data)
         source.seek(0)

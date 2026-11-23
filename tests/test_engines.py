@@ -63,8 +63,10 @@ class EngineAdapterTests(unittest.TestCase):
             self.assertIs(popen.call_args.kwargs["shell"], False)
             self.assertNotIn("INFA_SLED_API_KEY", popen.call_args.kwargs["env"])
             self.assertEqual((code, output), (7, "example"))
+            self.assertEqual(list(directory.iterdir()), [])
             with self.assertRaisesRegex(EngineError, "czasu"):
                 run_engine([*command, "import time; time.sleep(2)"], directory, b"", timeout=0.1)
+            self.assertEqual(list(directory.iterdir()), [])
             for stream, limit_name in (
                 ("stdout", "MAX_STDOUT_BYTES"), ("stderr", "MAX_STDERR_BYTES"),
             ):
@@ -72,7 +74,7 @@ class EngineAdapterTests(unittest.TestCase):
                     with self.assertRaisesRegex(EngineError, "wyjscia"):
                         program = f"import sys; sys.{stream}.write('x'*2000)"
                         run_engine([*command, program], directory, b"")
-            self.assertEqual(list(directory.iterdir()), [])
+                    self.assertEqual(list(directory.iterdir()), [])
 
     def test_output_mapping_distinguishes_empty_partial_and_malformed(self) -> None:
         diagnostic = {"code": 2086, "line": 3, "level": "warning", "message": "Quote the expansion"}

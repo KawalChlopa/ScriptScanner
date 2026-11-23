@@ -72,6 +72,10 @@ ma przykład pozytywny i negatywny. Dane trafiają do adapterów jako tekst
 lub bajty. Testy obejmują również błąd składni Esprimy, blokadę dyrektyw
 PowerShell oraz próbę wyciszenia diagnostyki ShellCheck z treści próbki.
 
+Test uruchamiania adaptera sprawdza usuwanie plików wejścia i wyjścia
+na Windows i Linux po zakończeniu procesu, przekroczeniu czasu i
+przekroczeniu limitu wyjścia.
+
 Na Windows można sprawdzić `install.cmd` oraz wykonać z nowego CMD polecenie
 `py src/main.py examples/engine_check.sh`. Wyniki `YARA-SH-001`,
 `SEMGREP-SH-001` i `SC2086` potwierdzają działanie tych trzech adapterów.
